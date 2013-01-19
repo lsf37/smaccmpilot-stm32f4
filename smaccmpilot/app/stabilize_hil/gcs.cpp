@@ -24,6 +24,8 @@
 #include <include/mavlink/v1.0/common/mavlink.h>
 
 #include <smaccmpilot/motorsoutput.h>
+#include <smaccmpilot/sensors.h>
+#include <smaccmpilot/gps.h>
 #include "gcs.h"
 
 extern const AP_HAL::HAL& hal;
@@ -53,11 +55,18 @@ static xTaskHandle g_gcs_task;
 static xSemaphoreHandle g_sensors_mutex;
 static struct sensors_result g_sensors;
 
+// Shared GPS state data and mutex protecting it.
+static xSemaphoreHandle g_gps_mutex;
+static struct gps_result g_gps;
+
 // Shared servo state and mutex protecting it.
 static xSemaphoreHandle g_servos_mutex;
 static struct servo_result g_servos;
 
 static void gcs_set_stream_rate(uint8_t stream, uint8_t enable, uint16_t rate);
+
+//////////////////////////////////////////////////////////////////////
+// Shared State
 
 // Read the sensor result.
 bool gcs_sensors_get(struct sensors_result *state)
@@ -84,6 +93,35 @@ static void gcs_sensors_set(const struct sensors_result *state)
         xSemaphoreGive(g_sensors_mutex);
     } else {
         hal.scheduler->panic("PANIC: gcs_sensors_set took too long "
+                             "to acquire mutex");
+    }
+}
+
+// Read the raw GPS data.
+bool gcs_gps_get(struct gps_result *state)
+{
+    bool result = false;
+
+    if (xSemaphoreTake(g_gps_mutex, 1)) {
+        memcpy(state, &g_gps, sizeof(g_gps));
+        result = state->valid;
+        xSemaphoreGive(g_gps_mutex);
+    } else {
+        hal.scheduler->panic("PANIC: gcs_gps_get took too long "
+                             "to acquire mutex");
+    }
+
+    return result;
+}
+
+// Set the sensor result from inside the GCS thread.
+static void gcs_gps_set(const struct gps_result *state)
+{
+    if (xSemaphoreTake(g_gps_mutex, 1)) {
+        memcpy(&g_gps, state, sizeof(g_gps));
+        xSemaphoreGive(g_gps_mutex);
+    } else {
+        hal.scheduler->panic("PANIC: gcs_gps_set took too long "
                              "to acquire mutex");
     }
 }
@@ -155,19 +193,19 @@ static void gcs_send_attitude()
 // Send a GLOBAL_POSITION_INT message from the sensor state.
 static void gcs_send_location()
 {
-    struct sensors_result sensors;
+    struct gps_result gps;
     mavlink_message_t msg;
     uint16_t len;
 
-    if (!gcs_sensors_get(&sensors))
+    if (!gcs_gps_get(&gps))
         return;
 
     mavlink_msg_global_position_int_pack(
         SYS_ID, COMP_ID, &msg,
         hal.scheduler->millis(),
-        sensors.lat, sensors.lon, sensors.gps_alt,
-        sensors.gps_alt,        // XXX what is ground?
-        sensors.vx, sensors.vy, sensors.vz,
+        gps.lat, gps.lon, gps.alt,
+        gps.alt,                // XXX what is ground?
+        gps.vx, gps.vy, gps.vz,
         65535);                 // XXX where do we get heading?
     len = mavlink_msg_to_send_buffer(g_buf, &msg);
     usart_write(GCS_UART, g_buf, len);
@@ -176,16 +214,16 @@ static void gcs_send_location()
 // Send a GPS_RAW_INT message from the sensor state.
 static void gcs_send_gps_raw_int()
 {
-    struct sensors_result sensors;
+    struct gps_result gps;
     mavlink_message_t msg;
     uint16_t len;
 
-    if (!gcs_sensors_get(&sensors))
+    if (!gcs_gps_get(&gps))
         return;
 
     mavlink_msg_gps_raw_int_pack(SYS_ID, COMP_ID, &msg,
                                  hal.scheduler->micros(), 3, // 3D fix
-                                 sensors.lat, sensors.lon, sensors.gps_alt,
+                                 gps.lat, gps.lon, gps.alt,
                                  65535, 65535, 65535, 65535, 255);
     len = mavlink_msg_to_send_buffer(g_buf, &msg);
     usart_write(GCS_UART, g_buf, len);
@@ -195,10 +233,13 @@ static void gcs_send_gps_raw_int()
 static void gcs_send_vfr_hud()
 {
     struct sensors_result sensors;
+    struct gps_result gps;
     mavlink_message_t msg;
     uint16_t len;
 
     if (!gcs_sensors_get(&sensors))
+        return;
+    if (!gcs_gps_get(&gps))
         return;
 
     mavlink_msg_vfr_hud_pack(
@@ -206,8 +247,8 @@ static void gcs_send_vfr_hud()
         0.0f, 0.0f,             // XXX air and ground speed?
         degrees(sensors.yaw),
         0,                      // XXX throttle
-        sensors.gps_alt / 1000.0f,
-        0.0f);                  // XXX climb rate
+        gps.alt / 1000.0f,
+        sensors.climb_rate);
     len = mavlink_msg_to_send_buffer(g_buf, &msg);
     usart_write(GCS_UART, g_buf, len);
 }
@@ -237,29 +278,51 @@ static void gcs_send_servo_output_raw()
 // Handle a HIL_STATE message with HIL sensor data.
 static void gcs_handle_hil_state(const mavlink_message_t *msg)
 {
-    struct sensors_result state;
+    struct sensors_result sensors;
+    struct sensors_result prev;
+    struct gps_result gps;
     mavlink_hil_state_t m;
+
     mavlink_msg_hil_state_decode(msg, &m);
 
-    state.valid    = true;
-    state.roll     = m.roll;
-    state.pitch    = m.pitch;
-    state.yaw      = m.yaw;
-    state.omega_x  = m.rollspeed;
-    state.omega_y  = m.pitchspeed;
-    state.omega_z  = m.yawspeed;
-    state.baro_alt = (float)m.alt / 1000.0f;
-    state.lat      = m.lat;
-    state.lon      = m.lon;
-    state.gps_alt  = m.alt;
-    state.vx       = m.vx;
-    state.vy       = m.vy;
-    state.vz       = m.vz;
-    state.xacc     = m.xacc;
-    state.yacc     = m.yacc;
-    state.zacc     = m.zacc;
+    sensors.valid      = true;
+    sensors.time_ms    = m.time_usec / 1000;
+    sensors.roll       = m.roll;
+    sensors.pitch      = m.pitch;
+    sensors.yaw        = m.yaw;
+    sensors.omega_x    = m.rollspeed;
+    sensors.omega_y    = m.pitchspeed;
+    sensors.omega_z    = m.yawspeed;
+    sensors.baro_alt   = (float)m.alt / 1000.0f;
+    sensors.climb_rate = 0.0f;
 
-    gcs_sensors_set(&state);
+    gps.valid   = true;
+    gps.time_ms = m.time_usec / 1000;
+    gps.lat     = m.lat;
+    gps.lon     = m.lon;
+    gps.alt     = m.alt;
+    gps.vx      = m.vx;
+    gps.vy      = m.vy;
+    gps.vz      = m.vz;
+
+    // Calculate climb rate based on the difference between this HIL
+    // state and the current one.
+    if (gcs_sensors_get(&prev)) {
+        uint32_t dt = sensors.time_ms - prev.time_ms;
+
+        // XXX Filter out bogus data from MAVproxy when it gets
+        // confused about HIL_STATE packet timing.  Ouch.
+        if (dt != 0 && dt < 25) {
+            float dt_sec = ((float)dt / 1000.0f);
+            sensors.climb_rate = (sensors.baro_alt - prev.baro_alt) / dt_sec;
+            // hal.console->printf("alt %.2f prev %.2f dt %lu dt_sec %0.4f rate %.2f\r\n",
+            //                     sensors.baro_alt, prev.baro_alt, dt, dt_sec,
+            //                     sensors.climb_rate);
+        }
+    }
+
+    gcs_sensors_set(&sensors);
+    gcs_gps_set(&gps);
 }
 
 // Handle a REQUEST_STREAM message.
@@ -401,9 +464,11 @@ static void gcs_task(void *arg)
 void gcs_init()
 {
     memset(&g_sensors, 0, sizeof(g_sensors));
+    memset(&g_gps,     0, sizeof(g_gps));
     memset(&g_servos,  0, sizeof(g_servos));
 
     g_sensors_mutex = xSemaphoreCreateMutex();
+    g_gps_mutex     = xSemaphoreCreateMutex();
     g_servos_mutex  = xSemaphoreCreateMutex();
 
     xTaskCreate(gcs_task, (signed char *)"gcs", 512, NULL, 0, &g_gcs_task);

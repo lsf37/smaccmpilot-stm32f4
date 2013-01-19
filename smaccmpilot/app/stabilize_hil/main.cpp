@@ -19,6 +19,8 @@
 
 #include <smaccmpilot/userinput.h>
 #include <smaccmpilot/motorsoutput.h>
+#include <smaccmpilot/sensors.h>
+#include <smaccmpilot/gps.h>
 #include <smaccmpilot/stabilize.h>
 #include "gcs.h"
 
@@ -27,22 +29,30 @@ const AP_HAL::HAL& hal = AP_HAL_BOARD_DRIVER;
 // Handle to the main thread.
 static xTaskHandle g_main_task;
 
+extern "C" float throttle_to_climb_rate(float throttle);
+
+extern float g_throttle_cruise;
+
 // Main thread.  Starts up the GCS thread to communicate with the
 // host, then processes incoming sensor data and writes servo output
 // back to MAVLink.
 void main_task(void *arg)
 {
+    struct userinput_result input;
+    struct sensors_result sensors;
+    struct motorsoutput_result motors;
+    struct servo_result servos;
+    portTickType last_wake;
+
     hal.init(0, NULL);
     userinput_init();
     motorsoutput_init();
     gcs_init();
 
-    for (;;) {
-        struct userinput_result input;
-        struct sensors_result sensors;
-        struct motorsoutput_result motors;
-        struct servo_result servos;
+    memset(&sensors, 0, sizeof(sensors));
+    last_wake = xTaskGetTickCount();
 
+    for (;;) {
         userinput_get(&input);
         gcs_sensors_get(&sensors);
         stabilize_motors(&input, &sensors, &motors);
@@ -50,7 +60,7 @@ void main_task(void *arg)
         motorsoutput_getservo(&servos);
         gcs_servos_set(&servos);
 
-        vTaskDelay(10);
+        vTaskDelayUntil(&last_wake, 10);
     }
 }
 
