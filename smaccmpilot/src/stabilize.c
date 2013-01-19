@@ -82,6 +82,86 @@ static struct PID g_pi_yaw_rate = {
     8.0f,                       // i_max
 };
 
+static struct PID g_pi_throttle_climb_rate = {
+    0.5f,                       // p_gain
+    0.0f,                       // i_gain
+    0.0f,                       // i_state
+    -10.0f,                     // i_min
+    10.0f,                      // i_max
+};
+
+#define MAX_CLIMB_RATE  2.0f
+
+// Convert a normalized throttle stick value [0.0, 1.0] to a climb
+// rate in m/sec.  This uses a wide dead zone to maintain a constant
+// altitude.
+float throttle_to_climb_rate(float stick)
+{
+    const float dead_zone = 0.4f;
+    const float cutoff    = 0.9f;
+
+    stick = (stick * 2.0f) - 1.0f; // convert to [-1.0, 1.0]
+
+    if (stick >= cutoff) {
+        return MAX_CLIMB_RATE;
+    } else if (stick <= -cutoff) {
+        return 0.0f;
+    } else if (stick >= dead_zone) {
+        stick = (stick - dead_zone) * (1.0f / (1.0f - dead_zone));
+        return stick * MAX_CLIMB_RATE;
+    } else if (stick <= -dead_zone) {
+        stick = (stick + dead_zone) * (1.0f / (1.0f - dead_zone));
+        return stick * MAX_CLIMB_RATE;
+    } else {
+        return 0.0f;
+    }
+}
+
+float constrain(float x, float min, float max)
+{
+    return (x < min ? min : (x > max ? max : x));
+}
+
+float degrees(float rad)
+{
+    return rad * 57.295779513082320876798154814105;
+}
+
+float g_throttle_cruise = 0.3f;
+float g_throttle_avg    = 0.0f;
+static const float g_throttle_min = 0.2f;
+
+static void update_throttle_cruise(float throttle,
+                                   const struct sensors_result *sensors)
+{
+    if (g_throttle_avg == 0.0f) {
+        g_throttle_avg = g_throttle_cruise;
+    }
+
+    // Calculate average throttle if we are in a level hover.
+    if (throttle > g_throttle_min && fabsf(sensors->climb_rate) < 0.1 &&
+        fabsf(degrees(sensors->roll)) < 5.0f &&
+        fabsf(degrees(sensors->pitch)) < 5.0f) {
+        g_throttle_avg = g_throttle_avg * 0.99f + throttle * 0.01f;
+        g_throttle_cruise = g_throttle_avg;
+    }
+}
+
+float stabilize_throttle_climb_rate(const struct userinput_result *in,
+                                    const struct sensors_result *sensors)
+{
+    float desired_rate = throttle_to_climb_rate(in->throttle);
+    float actual_rate  = sensors->climb_rate;
+    float error        = desired_rate - actual_rate;
+    float result       = pid_update(&g_pi_throttle_climb_rate, error);
+
+    if (desired_rate < 0.1f && desired_rate >= -0.1f) {
+        update_throttle_cruise(in->throttle, sensors);
+    }
+
+    return g_throttle_cruise + result;
+}
+
 void stabilize_motors(const struct userinput_result *in,
                       const struct sensors_result *sensors,
                       struct motorsoutput_result *out)
@@ -99,7 +179,8 @@ void stabilize_motors(const struct userinput_result *in,
     out->yaw   = stabilize_from_rate(&g_pi_yaw_rate, in->yaw, MAX_INPUT_YAW,
                                      sensors->omega_z, MAX_OUTPUT_YAW);
 
+    out->throttle = stabilize_throttle_climb_rate(in, sensors);
+
     out->armed    = in->armed;
-    out->throttle = in->throttle;
     out->time     = in->time;
 }
