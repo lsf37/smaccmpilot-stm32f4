@@ -44,6 +44,7 @@ SMACCMPILOT_OBJECTS :=       \
   src/optflow_input.o        \
   src/ioar_relay.o           \
   src/altitude_controller.o  \
+  src/horizontal_controller.o \
   src/position_estimator.o   \
   src/pid_stabilize.o
 

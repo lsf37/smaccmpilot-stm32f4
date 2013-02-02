@@ -26,6 +26,7 @@
 #include <smaccmpilot/optflow_input.h>
 #include <smaccmpilot/position_estimator.h>
 #include <smaccmpilot/altitude_controller.h>
+#include <smaccmpilot/horizontal_controller.h>
 #include <smaccmpilot/ioar_relay.h>
 
 const AP_HAL::HAL& hal = AP_HAL_BOARD_DRIVER;
@@ -71,6 +72,7 @@ void main_task(void *arg)
 {
     struct userinput_result userinput;
     struct userinput_result altitude_comped_input;
+    struct userinput_result althoriz_comped_input;
     struct sensors_result sensors;
     struct motorsoutput_result motors;
     struct position_result gps_position;
@@ -102,7 +104,10 @@ void main_task(void *arg)
         altitude_compensate(&pos_estimate, &sensors, &userinput,
                 &altitude_comped_input);
 
-        stabilize_motors(&altitude_comped_input, &sensors, &motors);
+        horizontal_compensate(&pos_estimate, &sensors, &altitude_comped_input,
+                &althoriz_comped_input);
+
+        stabilize_motors(&althoriz_comped_input, &sensors, &motors);
 
         motorsoutput_set(&motors);
 
@@ -111,7 +116,7 @@ void main_task(void *arg)
         position_estimate_output(&pos_estimate, &fromestimated_position);
 
         gcs_transmit_set_states(&sensors, &fromestimated_position,
-                &motors, &servos, &altitude_comped_input);
+                &motors, &servos, &althoriz_comped_input);
 
         if (!(userinput.armed)){
             ioar_relay_set(IOAR_RELAY_PULSE_SLOW);
