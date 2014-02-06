@@ -11,6 +11,8 @@
 #include "mutex.h"
 #include "task.h"
 #include "port.h"
+#include "config.h"
+#include "debug.h"
 
 #define pdTRUE		1
 #define pdFALSE		0
