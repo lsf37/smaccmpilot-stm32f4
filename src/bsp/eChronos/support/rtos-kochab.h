@@ -50,7 +50,8 @@ typedef uint8_t SemId;
 extern int _muxid_count;
 extern int _semid_count;
 extern int _taskid_count;
-
+extern int _wrapper_mux_start;
+extern int _wrapper_sem_start;
 
 #define TASK_ID_C(x) ((TaskId) UINT8_C(x))
 #define TASK_ID_ZERO TASK_ID_C(0)

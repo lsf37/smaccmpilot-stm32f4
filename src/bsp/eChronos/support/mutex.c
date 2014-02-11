@@ -49,18 +49,10 @@ struct xSemMux_t{
 	void * 	priv;
 };
 
-#ifndef MUTEX_ID_m00
-#define MUTEX_ID_m00 0
-#endif
-
-#ifndef SEM_ID_sem00
-#define SEM_ID_sem00 0
-#endif
-
-#define xMUTEX_START			MUTEX_ID_m00
+#define xMUTEX_START			_wrapper_mux_start
 #define xMUTEX_END			MUTEX_ID_MAX
 #define xMUTEX_NUM			(xMUTEX_END + 1 - xMUTEX_START)
-#define xSEM_START			SEM_ID_sem00
+#define xSEM_START			_wrapper_sem_start
 #define xSEM_END			SEM_ID_MAX 
 #define xSEM_NUM		 	(xSEM_END + 1 - xSEM_START)	
 
