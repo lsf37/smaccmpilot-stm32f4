@@ -11,6 +11,7 @@
 
 #define configCPU_CLOCK_HZ			( ( unsigned long ) 168000000 )
 #define configTICK_RATE_HZ			( ( unsigned long ) 1000 )
+#define TICK_RATE_PER_MS 			(configTICK_RATE_HZ/(unsigned long)1000)
 
 
 /* Constants required to manipulate the core.  Registers first... */

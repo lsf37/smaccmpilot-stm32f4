@@ -33,9 +33,8 @@ void ClearPendSVPending(void)
     portNVIC_INT_CTRL_REG = portNVIC_PENDSVCLEAR_BIT;
 }
 
-
 long _ms_to_ticks(long ms){
-    return ms * 1;
+    return ms * TICK_RATE_PER_MS;
 }
 
 
