@@ -20,8 +20,8 @@ to the Licensee's use and disclosure of the software, and shall supersede
 any conflicting contractual terms or conditions.
 
 */
-#ifndef RTOS_KOCHAB_H
-#define RTOS_KOCHAB_H
+#ifndef RTOS_H
+#define RTOS_H
 #include <stdint.h>
 
 
@@ -131,4 +131,4 @@ void rtos_disable_preempt(void);
 #endif
 
 
-#endif /* RTOS_KOCHAB_H */
+#endif /* RTOS_H */

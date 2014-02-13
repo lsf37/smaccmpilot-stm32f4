@@ -6,7 +6,7 @@
  */
 
 #include "stm32f4xx.h"
-#include "rtos-kochab.h"
+#include "rtos.h"
 #include "debug.h"
 #include "port.h"
 

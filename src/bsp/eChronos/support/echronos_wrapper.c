@@ -6,7 +6,7 @@
  */
 
 #include "eChronos.h"
-#include "rtos-kochab.h"
+#include "rtos.h"
 #include "task.h"
 #include "mutex.h"
 #include "queue.h"

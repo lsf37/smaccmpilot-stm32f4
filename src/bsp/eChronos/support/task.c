@@ -6,7 +6,7 @@
  */
 
 #include <stdlib.h>
-#include "rtos-kochab.h"
+#include "rtos.h"
 #include "stm32f4xx.h"
 #include "debug.h"
 #include "mutex.h"

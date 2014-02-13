@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "rtos-kochab.h"
+#include "rtos.h"
 #include "mutex.h"
 #include "task.h"
 #include "port.h"
