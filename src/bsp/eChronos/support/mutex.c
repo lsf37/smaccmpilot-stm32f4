@@ -30,25 +30,6 @@ enum{
 	COUNTING_SEMAPHORE = 4
 };
 
-struct MUX_t{
-	int 		mux_type;								//type of semaphore / mutex
-	uint8_t 	muxid;
-	int 		TskHoldCnt;
-};
-
-struct SEM_t{
-	int 		sem_type;
-	uint8_t 	semid;
-	int 		max_count;
-	int 		initial_count;
-};
-
-struct xSemMux_t{
-	int 	created;
-	int 	type;
-	void * 	priv;
-};
-
 #define xMUTEX_START			_wrapper_mux_start
 #define xMUTEX_END			MUTEX_ID_MAX
 #define xMUTEX_NUM			(xMUTEX_END + 1 - xMUTEX_START)
@@ -60,9 +41,15 @@ struct xSemMux_t{
 #define xSEM_NUM_MAX			xSEM_NUM
 #define xSEM_MUX_NUM_MAX		(xMUTEX_NUM_MAX + xSEM_NUM_MAX)
 
-static struct MUX_t* 			xMuxList;
-static struct SEM_t* 			xSemList;
-static struct xSemMux_t*		xSemMuxList;
+// The arrays definitions are compiled with the application and made available
+// here after linking.
+extern struct MUX_t			_mux_array[];
+extern struct SEM_t 			_sem_array[];
+extern struct xSemMux_t			_semmux_array[];
+
+struct MUX_t *xMuxList = _mux_array;
+struct SEM_t *xSemList = _sem_array;
+struct xSemMux_t *xSemMuxList = _semmux_array;
 
 static uint8_t xMuxAssignID = 0;	/* 	xMuxAssignID is used to keep track of assigned mutex ids */
 static uint8_t xSemAssignID = 0;	/* 	xSemAssignID is used to keep track of assigned sem ids */
@@ -97,9 +84,11 @@ static void xSem_init(void){
 static void xSemMux_init(void)
 {
 	int i = 0;
+/*
     xMuxList = malloc(sizeof(*xMuxList) * _muxid_count);
     xSemList = malloc(sizeof(*xSemList) * _semid_count);
     xSemMuxList = malloc(sizeof(*xSemMuxList) * (_muxid_count + _semid_count));
+*/
 	xMux_init();
 	xSem_init();
 
