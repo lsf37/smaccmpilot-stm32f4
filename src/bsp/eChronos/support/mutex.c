@@ -13,9 +13,9 @@
 #include "port.h"
 #include "config.h"
 #include "debug.h"
+#include "echronos_wrapper.h"
 
-#define pdTRUE		1
-#define pdFALSE		0
+#include <eChronos.h>
 
 extern bool rtos_sem_wait_delay(SemId,unsigned long);
 
