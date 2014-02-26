@@ -11,11 +11,8 @@
 #include "mutex.h"
 #include "queue.h"
 #include "port.h"
+#include "echronos_wrapper.h"
 #include <assert.h>
-
-#define UNIMPLEMENTED() assert(!"UNIMPLEMENETED");
-#define vNOP() UNIMPLEMENTED()
-#define NOP(type) do { UNIMPLEMENTED(); return (type)0; } while(0)
 
 extern unsigned long rtos_get_sys_tick(void);
 
@@ -82,6 +79,7 @@ void* xSemaphoreGetMutexHolder( xSemaphoreHandle xMuxId)
 void vSemaphoreDelete( xSemaphoreHandle xSemaphore)
 {
 	//FIXME: need implementation
+	UNIMPLEMENTED();
 }
 
 
@@ -124,7 +122,7 @@ xTaskHandle xTaskGetCurrentTaskHandle( void )
 
 void vTaskSetApplicationTaskTag( xTaskHandle xTask, pdTASK_HOOK_CODE pxHookFunction )
 {
-    //vNOP();
+    vNOP();
 }
 
 

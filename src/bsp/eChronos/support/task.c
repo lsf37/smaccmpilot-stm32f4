@@ -13,14 +13,10 @@
 #include "task.h"
 #include "port.h"
 #include "config.h"
+#include "echronos_wrapper.h"
 
 
 extern void *entry_fn[];
-
-extern void UNIMPLEMENTED(void);
-#define vNOP() UNIMPLEMENTED()
-#define NOP(type) do { UNIMPLEMENTED(); return (type)0; } while(0)
-
 
 #define	TASK_NUM_MAX	(TASK_ID_MAX + 1)
 
