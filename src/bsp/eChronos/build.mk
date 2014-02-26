@@ -23,10 +23,10 @@ LIBECHRONOS_OBJECTS += support/queue.o
 LIBECHRONOS_OBJECTS += support/syscalls.o
 LIBECHRONOS_OBJECTS += support/echronos_wrapper.o
 
-LIBECHRONOS_OBJECTS += support/gpio.o
-LIBECHRONOS_OBJECTS += support/fault.o
-LIBECHRONOS_OBJECTS += support/led.o
-LIBECHRONOS_OBJECTS += support/rcc.o
+#LIBECHRONOS_OBJECTS += support/gpio.o
+#LIBECHRONOS_OBJECTS += support/fault.o
+#LIBECHRONOS_OBJECTS += support/led.o
+#LIBECHRONOS_OBJECTS += support/rcc.o
 
 $(eval $(call when_os,echronos,library,LIBECHRONOS))
 
