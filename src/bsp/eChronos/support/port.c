@@ -134,8 +134,6 @@ void xPortStart( void )
 
 void vPortYieldFromISR( void )
 {
-	/* Set a PendSV to request a context switch. */
-	//portNVIC_INT_CTRL_REG = portNVIC_PENDSVSET_BIT;
 	UNIMPLEMENTED();
 }
 

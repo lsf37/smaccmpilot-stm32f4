@@ -132,12 +132,6 @@ unsigned portBASE_TYPE uxQueueMessagesWaiting( const xQueueHandle pxQueue);
 		}																																		\
 	}
 
-
-extern void debug_printhex32(const uint32_t val);
-extern void debug_println(const char *msg);
-
-
-
 #ifdef __cplusplus
 }
 #endif

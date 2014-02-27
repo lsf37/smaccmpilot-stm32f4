@@ -80,11 +80,6 @@ static void xSem_init(void){
 static void xSemMux_init(void)
 {
 	int i = 0;
-/*
-    xMuxList = malloc(sizeof(*xMuxList) * _muxid_count);
-    xSemList = malloc(sizeof(*xSemList) * _semid_count);
-    xSemMuxList = malloc(sizeof(*xSemMuxList) * (_muxid_count + _semid_count));
-*/
 	xMux_init();
 	xSem_init();
 
