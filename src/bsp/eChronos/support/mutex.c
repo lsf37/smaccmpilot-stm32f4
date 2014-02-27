@@ -11,7 +11,6 @@
 #include "mutex.h"
 #include "task.h"
 #include "port.h"
-#include "config.h"
 #include "debug.h"
 #include "echronos_wrapper.h"
 

@@ -14,8 +14,6 @@
 #include "stm32f4xx.h"
 #include "core_cm4.h"
 #include "port.h"
-#include "config.h"
-
 
 extern void vPortEnterCritical(void);
 extern void vPortExitCritical(void);
