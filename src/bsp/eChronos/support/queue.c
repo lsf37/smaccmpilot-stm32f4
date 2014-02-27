@@ -1,3 +1,9 @@
+/*
+ * queue.c
+ *
+ *  Created on: Nov 14, 2013
+ *      Author: jxie @ NICTA
+ */
 
 #include "rtos.h"
 #include "queue.h"
