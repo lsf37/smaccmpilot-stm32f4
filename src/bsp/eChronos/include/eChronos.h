@@ -15,10 +15,6 @@
 #include "core_cm4.h"
 #include "port.h"
 
-extern void vPortEnterCritical(void);
-extern void vPortExitCritical(void);
-
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -38,6 +34,14 @@ extern "C" {
 #define pdFALSE			( 0 )
 #define pdPASS			( 1 )
 #define pdFAIL			( 0 )
+
+/* Error definitions. */
+#define errQUEUE_EMPTY                                                  ( 0 )
+#define errQUEUE_FULL                                                   ( 0 )
+#define errCOULD_NOT_ALLOCATE_REQUIRED_MEMORY   ( -1 )
+#define errNO_TASK_TO_RUN                                               ( -2 )
+#define errQUEUE_BLOCKED                                                ( -4 )
+#define errQUEUE_YIELD                                                  ( -5 )
 
 
 #if( configUSE_16_BIT_TICKS == 1 )
@@ -78,8 +82,13 @@ void portDisable_IRQs(void);
 void portENTER_CRITICAL(void);
 void portEXIT_CRITICAL(void);
 
+// FIXME: this is wrong.  in FreeRTOS vPortEnterCritical is implemented in 
+// terms of portDISABLE_INTERRUPTS
 #define	portDISABLE_INTERRUPTS()	vPortEnterCritical()
 #define	portENABLE_INTERRUPTS()		vPortExitCritical()
+
+//extern void vPortEnterCritical(void);
+//extern void vPortExitCritical(void);
 
 /* MUTEX */
 xSemaphoreHandle xSemaphoreCreateMutex(void);

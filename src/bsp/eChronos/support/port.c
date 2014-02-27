@@ -66,6 +66,14 @@ __attribute__(( naked )) void vPortClearInterruptMask( unsigned long ulNewMaskVa
 	);
 }
 
+void portENTER_CRITICAL(void)
+{
+        vPortEnterCritical();
+}
+void portEXIT_CRITICAL(void)
+{
+        vPortExitCritical();
+}
 
 static unsigned long uxCriticalNesting = 0;
 

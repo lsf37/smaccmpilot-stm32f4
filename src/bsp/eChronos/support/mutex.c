@@ -483,7 +483,7 @@ void * eChronosGetMutexHolder(void * handler)
 		if(rtos_get_mutex_holder(mux->muxid) == TASK_ID_INVALID){
 			return NULL;
 		}
-		return eChronosGetTaskHandler(rtos_get_mutex_holder(mux->muxid));
+		return eChronosGetTaskHandle(rtos_get_mutex_holder(mux->muxid));
 	}else{
 #ifdef ECHRONOS_WRAPPER_DEBUG_ENABLE
 		debug_println("eChronosGetMutexHolder fault\n");

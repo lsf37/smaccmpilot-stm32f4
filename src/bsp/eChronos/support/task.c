@@ -60,13 +60,13 @@ void eChronosStartRTOS(void)
 	rtos_start();
 }
 
-void * eChronosGetCurrentTaskHandler( void )
+void * eChronosGetCurrentTaskHandle( void )
 {
 	uint8_t tskId = rtos_get_current_task();
 	return (void*)&xTaskList[tskId];
 }
 
-void * eChronosGetTaskHandler(uint8_t tskId)
+void * eChronosGetTaskHandle(uint8_t tskId)
 {
 	return (void*)&xTaskList[tskId];
 }

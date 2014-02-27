@@ -14,23 +14,17 @@
 #include "echronos_wrapper.h"
 #include <assert.h>
 
-extern unsigned long rtos_get_sys_tick(void);
-
-
-void portENTER_CRITICAL(void)
+// FIXME: This has to go.
+void vTaskStartScheduler(void)
 {
-	vPortEnterCritical();
-}
-void portEXIT_CRITICAL(void)
-{
-	vPortExitCritical();
+	xPortStart();
+    eChronosStartRTOS();
 }
 
 /* SEM/MUTEX APIs */
 xSemaphoreHandle xSemaphoreCreateCounting( unsigned portBASE_TYPE uxCountValue, unsigned portBASE_TYPE uxInitialCount)
 {
-	xSemaphoreHandle x =  eChronosCreateSemaphoreCounting(uxCountValue, uxInitialCount);
-	return x;
+	return eChronosCreateSemaphoreCounting(uxCountValue, uxInitialCount);
 }
 
 xSemaphoreHandle xSemaphoreCreateMutex(void)
@@ -66,9 +60,19 @@ portBASE_TYPE xSemaphoreGiveRecursive(xSemaphoreHandle xMuxId )
 
 signed portBASE_TYPE  xSemaphoreGiveFromISR(xSemaphoreHandle xMuxId,signed portBASE_TYPE * pxHigherPriorityTaskWoken ){
 
-	*pxHigherPriorityTaskWoken = 0;
+	/* FIXME: This (calling a sempahore function from an ISR) isn't actually 
+	   allowed in eChronos. Ideally this should signal a separate task that 
+	   is responsible for dealing with the semaphore. */
 
-	return xSemaphoreGive(xMuxId);;
+	/* If the following is set to true, our caller should context switch 
+	   (yield) before leaving the ISR, if false, the caller doesn't do anything 
+	   special. However, since in eChronos an ISR can't yield, and we 
+	   implement yield from ISR as a noop, it doesn't matter what we set 
+	   this to: the caller will do nothing special.  So arbirarily set it 
+	   to false. */ 
+	*pxHigherPriorityTaskWoken = pdFALSE;
+
+	return xSemaphoreGive(xMuxId);
 }
 
 void* xSemaphoreGetMutexHolder( xSemaphoreHandle xMuxId)
@@ -78,7 +82,6 @@ void* xSemaphoreGetMutexHolder( xSemaphoreHandle xMuxId)
 
 void vSemaphoreDelete( xSemaphoreHandle xSemaphore)
 {
-	//FIXME: need implementation
 	UNIMPLEMENTED();
 }
 
@@ -90,17 +93,19 @@ signed portBASE_TYPE xTaskGenericCreate( pdTASK_CODE pxTaskCode, const signed ch
 											xTaskHandle *pxCreatedTask, portSTACK_TYPE *puxStackBuffer,
 											const xMemoryRegion * const xRegions )
 {
+	/* if we can't return a task id, then there's no point looking up the task */
 	if(pxCreatedTask != NULL){
 		*pxCreatedTask = eChronosCreateTask(pxTaskCode);
 		if(*pxCreatedTask){
 			 return pdPASS;
 		}else{
-			return pdFALSE;
+			return errNO_TASK_TO_RUN;
 		}
 	}
     return pdPASS;
 }
 
+// FIXME: freertos implements these as a call to xTaskCreateGeneric...
 signed portBASE_TYPE xTaskCreate( pdTASK_CODE pxTaskCode, const signed char * pcName,
 									unsigned short usStackDepth, void *pvParameters,
 									unsigned portBASE_TYPE uxPriority, xTaskHandle *pxCreatedTask){
@@ -109,7 +114,7 @@ signed portBASE_TYPE xTaskCreate( pdTASK_CODE pxTaskCode, const signed char * pc
 		if(*pxCreatedTask){
 			 return pdPASS;
 		}else{
-			return pdFALSE;
+			return errNO_TASK_TO_RUN;
 		}
 	}
     return pdPASS;
@@ -117,7 +122,7 @@ signed portBASE_TYPE xTaskCreate( pdTASK_CODE pxTaskCode, const signed char * pc
 
 xTaskHandle xTaskGetCurrentTaskHandle( void )
 {
-	return eChronosGetCurrentTaskHandler();
+	return eChronosGetCurrentTaskHandle();
 }
 
 void vTaskSetApplicationTaskTag( xTaskHandle xTask, pdTASK_HOOK_CODE pxHookFunction )
@@ -126,24 +131,15 @@ void vTaskSetApplicationTaskTag( xTaskHandle xTask, pdTASK_HOOK_CODE pxHookFunct
 }
 
 
-void vTaskStartScheduler(void)
-{
-	xPortStart();
-    eChronosStartRTOS();
-}
 
 portTickType xTaskGetTickCount(void)
 {
-	portTickType xTicks;
-
-	xTicks = eChronosGetSysTick();
-
-	return xTicks;
+	return eChronosGetSysTick();
 }
 
 void vTaskDelay( portTickType xMsToDelay )
 {
-	unsigned long curTime = rtos_get_sys_tick();
+	unsigned long curTime = eChronosGetSysTick()
 	eChronosTaskDelayUntil(&curTime, xMsToDelay);
 
 }
@@ -158,44 +154,40 @@ void taskYIELD(void)
 	eChronos_yield();
 }
 
-
-/*
- * QUEUE.c
- */
-
 xQueueHandle xQueueCreate( unsigned portBASE_TYPE uxQueueLength, unsigned portBASE_TYPE uxItemSize, unsigned char ucQueueType)
 {
-	uint32_t rval = eChronosQueueGenericCreate( uxQueueLength, uxItemSize, ucQueueType);
-	return (xQueueHandle)rval;
+	UNIMPLEMENTED();
+	retrun 0;
 }
 
 signed portBASE_TYPE xQueueSend( xQueueHandle pxQueue, const void * const pvItemToQueue, portTickType xTicksToWait, portBASE_TYPE xCopyPosition)
 {
-	uint8_t q = (uint32_t)pxQueue;
-	return eChronosQueueGenericSend((uint8_t)q, pvItemToQueue, xTicksToWait, xCopyPosition);
+	UNIMPLEMENTED();
+	return errQUEUE_FULL;
 }
-
 
 signed portBASE_TYPE xQueueReceive( xQueueHandle pxQueue, void * const pvBuffer, portTickType xTicksToWait, portBASE_TYPE xJustPeeking )
 {
-	uint8_t q = (uint32_t)pxQueue;
-	return eChrononsQueueGenericReceive( (uint8_t)q, pvBuffer, xTicksToWait, xJustPeeking);
+	UNIMPLEMENTED();
+	return pdFALSE;
 }
+
 signed portBASE_TYPE xQueueSendFromISR( xQueueHandle pxQueue, const void * const pvItemToQueue, signed portBASE_TYPE *pxHigherPriorityTaskWoken, portBASE_TYPE xCopyPosition )
 {
-	uint8_t q = (uint32_t)pxQueue;
-	return eChronosQueueGenericSendFromISR( (uint8_t)q, pvItemToQueue, pxHigherPriorityTaskWoken, xCopyPosition);
+	UNIMPLEMENTED();
+	return errQUEUE_FULL;
 }
+
 signed portBASE_TYPE xQueueReceiveFromISR( xQueueHandle pxQueue, void * const pvBuffer, signed portBASE_TYPE *pxHigherPriorityTaskWoken)
 {
-	uint8_t q = (uint32_t)pxQueue;
-	return eChronosQueueReceiveFromISR( (uint8_t)q, pvBuffer, pxHigherPriorityTaskWoken);
+	UNIMPLEMENTED();
+	return pdFALSE;
 }
 
 unsigned portBASE_TYPE uxQueueMessagesWaiting( const xQueueHandle pxQueue )
 {
-	uint8_t q = (uint32_t)pxQueue;
-	return eChronosQueueMessagesWaiting( (uint8_t)q);
+	UNIMPLEMENTED();
+	return 0;
 }
 
 
