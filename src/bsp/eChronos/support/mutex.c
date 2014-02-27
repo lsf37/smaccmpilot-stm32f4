@@ -109,7 +109,7 @@ static void * alloc_xSemMux(uint32_t type, int arg1, int arg2){
 
 			xMuxAssignID ++ ; //update xMuxAssignID
 		}else{
-#ifdef ECHRONOS_DEBUG_ENABLE
+#ifdef  ECHRONOS_WRAPPER_DEBUG_ENABLE
 			debug_println("error: trying to allocate too many mutexes\n");
 #endif
 		}
@@ -136,7 +136,7 @@ static void * alloc_xSemMux(uint32_t type, int arg1, int arg2){
 
 			xSemAssignID ++; //update xSemAssignID
 		}else{
-#ifdef ECHRONOS_DEBUG_ENABLE
+#ifdef  ECHRONOS_WRAPPER_DEBUG_ENABLE
 			debug_println("error: trying to allocate too many mutexes\n");
 #endif
 		}
@@ -147,7 +147,7 @@ static void * alloc_xSemMux(uint32_t type, int arg1, int arg2){
 	}
 
 	if(priv == NULL){
-#ifdef ECHRONOS_DEBUG_ENABLE
+#ifdef  ECHRONOS_WRAPPER_DEBUG_ENABLE
 		debug_println("error in alloc_mux ! \n");
 #endif
 	}
@@ -169,7 +169,7 @@ void* eChronosCreateSemaphoreCounting( unsigned long uxCountValue, unsigned long
 	void * priv = alloc_xSemMux(COUNTING_SEMAPHORE, uxCountValue, uxInitialCount);
 
 	if(priv == NULL){
-#ifdef ECHRONOS_DEBUG_ENABLE
+#ifdef  ECHRONOS_WRAPPER_DEBUG_ENABLE 
 		debug_println("error 1\n");
 #endif
 		return NULL;
@@ -185,7 +185,7 @@ void* eChronosCreateSemaphoreCounting( unsigned long uxCountValue, unsigned long
 	}
 
 	if(i >= xSEM_MUX_NUM_MAX){
-#ifdef ECHRONOS_DEBUG_ENABLE
+#ifdef  ECHRONOS_WRAPPER_DEBUG_ENABLE
 		debug_println("error 2\n");
 #endif
 		return NULL;
@@ -205,7 +205,7 @@ void* eChronosCreateMutex(void)
 	void * priv = alloc_xSemMux(BINARY_MUTEX, 0, 0);
 
 	if(priv == NULL){
-#ifdef ECHRONOS_DEBUG_ENABLE
+#ifdef  ECHRONOS_WRAPPER_DEBUG_ENABLE
 		debug_println("error 3\n");
 #endif
 		return NULL;
@@ -225,7 +225,7 @@ void* eChronosCreateMutex(void)
 	}
 
 	if(i >= xSEM_MUX_NUM_MAX){
-#ifdef ECHRONOS_DEBUG_ENABLE
+#ifdef  ECHRONOS_WRAPPER_DEBUG_ENABLE
 		debug_println("error 4\n");
 #endif
 		return NULL;
@@ -245,7 +245,7 @@ void* eChronosCreateRecursiveMutex(void)
 	void * priv = alloc_xSemMux(RECURSIVE_MUTEX, 0, 0);
 
 	if(priv == NULL){
-#ifdef ECHRONOS_DEBUG_ENABLE
+#ifdef  ECHRONOS_WRAPPER_DEBUG_ENABLE
 		debug_println("error 5\n");
 #endif
 		return NULL;
@@ -264,7 +264,7 @@ void* eChronosCreateRecursiveMutex(void)
 	}
 
 	if(i >= xSEM_MUX_NUM_MAX){
-#ifdef ECHRONOS_DEBUG_ENABLE
+#ifdef  ECHRONOS_WRAPPER_DEBUG_ENABLE
 		debug_println("error 6\n");
 #endif
 		return NULL;
@@ -331,7 +331,7 @@ static int _SemMux_Take(int type, void * priv, unsigned long max_delay_ms){
 			//increment the counter
 			mux->TskHoldCnt ++;
 		}else{
-#ifdef ECHRONOS_DEBUG_ENABLE
+#ifdef  ECHRONOS_WRAPPER_DEBUG_ENABLE
 			debug_println(": RECURSIVE_MUTEX Take FAULT!\n");
 #endif
 		}
@@ -405,7 +405,7 @@ static void _SemMux_Give(int type, void * priv)
 			}
 		}else{
 			//error!
-#ifdef ECHRONOS_DEBUG_ENABLE
+#ifdef  ECHRONOS_WRAPPER_DEBUG_ENABLE
 			debug_println(": RECURSIVE_MUTEX Give FAULT!\n");
 #endif
 		}
@@ -486,7 +486,7 @@ void * eChronosGetMutexHolder(void * handler)
 		}
 		return eChronosGetTaskHandler(rtos_get_mutex_holder(mux->muxid));
 	}else{
-#ifdef ECHRONOS_DEBUG_ENABLE
+#ifdef ECHRONOS_WRAPPER_DEBUG_ENABLE
 		debug_println("eChronosGetMutexHolder fault\n");
 #endif
 		return NULL;
