@@ -19,10 +19,6 @@
 
 extern bool rtos_sem_wait_delay(SemId,unsigned long);
 
-//extern void debug_println(const char *msg);
-
-//extern void debug_printhex32(uint32_t val);
-
 enum{
 	BINARY_MUTEX = 1,
 	RECURSIVE_MUTEX = 2,

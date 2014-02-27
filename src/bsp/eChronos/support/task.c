@@ -32,7 +32,6 @@ struct tsk_t * xTaskList;
 void * eChronosCreateTask(void * pxTaskCode)
 {
 	uint8_t selectid = assignTskId;
-	//assignTskId ++;
 	bool entryfn = false;
 	int i = 0;
 
@@ -42,31 +41,16 @@ void * eChronosCreateTask(void * pxTaskCode)
     }
 
 	for(i=0;i<TASK_NUM_MAX;i++){
-		//debug_println("Checking fn @ ");
-		//debug_printhex32(entry_fn[i]);
-		//debug_println("\n");
-
 		entryfn = ((void *)entry_fn[i] == pxTaskCode);
 		if(entryfn){
-			//debug_println("Found PxTaskcode!\n ");
 			break;
 		}
 	}
 	if(i < TASK_NUM_MAX){
 		selectid = i;
 	}else{
-		//debug_println("PxTaskcode not found!\n ");
-		//debug_printhex32(pxTaskCode);
-		//debug_println("\n");
 		return NULL;
 	}
-#ifdef ECHRONOS_DEBUG_ENABLE
-	debug_println("eChronosCreateTaskId ");
-	debug_printhex32(selectid);
-	debug_println(" @ ");
-	debug_printhex32((unsigned int)&xTaskList[selectid]);
-	debug_println("\n");
-#endif
 	return (void*)&xTaskList[selectid];
 }
 
