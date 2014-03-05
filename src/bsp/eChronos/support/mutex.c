@@ -436,18 +436,18 @@ static void _SemMux_Give(int type, void * priv)
 
 }
 
-signed long eChronosMutexTake(void * handler, unsigned long xBlockTime)
+signed long eChronosMutexTake(void * handle, unsigned long xBlockTime)
 {
-	struct xSemMux_t * x = (struct xSemMux_t *) handler;
+	struct xSemMux_t * x = (struct xSemMux_t *) handle;
 	if(x->created){
 		return _SemMux_Take(x->type, x->priv, xBlockTime);
 	}
 	return pdFALSE;
 }
 
-signed long eChronosMutexGive(void * handler){
+signed long eChronosMutexGive(void * handle){
 
-	struct xSemMux_t * x = (struct xSemMux_t *) handler;
+	struct xSemMux_t * x = (struct xSemMux_t *) handle;
 	if(x->created){
 		_SemMux_Give(x->type, x->priv);
 		return pdTRUE;
@@ -456,18 +456,18 @@ signed long eChronosMutexGive(void * handler){
 }
 
 
-long eChronosMutexTakeRecursive(void * handler, unsigned long xBlockTime)
+long eChronosMutexTakeRecursive(void * handle, unsigned long xBlockTime)
 {
-	struct xSemMux_t * x = (struct xSemMux_t *) handler;
+	struct xSemMux_t * x = (struct xSemMux_t *) handle;
 	if(x->created){
 		return _SemMux_Take(x->type, x->priv, xBlockTime);
 	}
 	return pdFALSE;
 }
 
-long eChronosMutexGiveRecursive(void * handler)
+long eChronosMutexGiveRecursive(void * handle)
 {
-	struct xSemMux_t * x = (struct xSemMux_t *) handler;
+	struct xSemMux_t * x = (struct xSemMux_t *) handle;
 	if(x->created){
 		_SemMux_Give(x->type, x->priv);
 		return pdTRUE;
@@ -475,9 +475,9 @@ long eChronosMutexGiveRecursive(void * handler)
 	return pdFALSE;
 
 }
-void * eChronosGetMutexHolder(void * handler)
+void * eChronosGetMutexHolder(void * handle)
 {
-	struct xSemMux_t * x = (struct xSemMux_t *) handler;
+	struct xSemMux_t * x = (struct xSemMux_t *) handle;
 	if(x->created == 1){
 		struct MUX_t * mux = (struct MUX_t *) x->priv;
 		if(rtos_get_mutex_holder(mux->muxid) == TASK_ID_INVALID){

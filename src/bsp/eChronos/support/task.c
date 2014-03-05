@@ -21,7 +21,7 @@ extern void *entry_fn[];
 
 static int assignTskId = 0;
 
-/* Now it is a dummy handler, used to identify tasks */
+/* Now it is a dummy handle, used to identify tasks */
 struct tsk_t{
 	uint8_t taskid;
 };
