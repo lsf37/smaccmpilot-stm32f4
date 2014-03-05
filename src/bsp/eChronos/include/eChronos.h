@@ -61,7 +61,7 @@ typedef portBASE_TYPE (*pdTASK_HOOK_CODE)	( void * );
 
 /* Architecture specifics. */
 #define portSTACK_GROWTH			( -1 )
-#define portTICK_RATE_MS			1//( ( portTickType ) 1000 / configTICK_RATE_HZ )
+#define portTICK_RATE_MS			TICK_RATE_PER_MS //( ( portTickType ) 1000 / configTICK_RATE_HZ )
 #define portBYTE_ALIGNMENT			8
 /*-----------------------------------------------------------*/
 
