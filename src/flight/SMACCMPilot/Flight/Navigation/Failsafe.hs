@@ -58,7 +58,7 @@ taskFailsafe params commsec_snk = do
           unless activated $ do
             cur_alt <- deref (sens ~> S.baro_alt)
             fs_offs <- paramGet fs_alt_param
-            store target (cur_alt + fs_offs)
+            store target (cur_alt) --  + fs_offs)
 
           store active true
           store (nlaw ~> NL.velocity_control) false
