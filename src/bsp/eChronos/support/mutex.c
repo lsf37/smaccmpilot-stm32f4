@@ -319,7 +319,7 @@ static int _SemMux_Take(int type, void * priv, unsigned long max_delay_ms){
 
 		rtos_disable_preempt();
 	    /* JWX: safe to disable irqs */
-	    ulPortSetInterruptMask();
+		//	    ulPortSetInterruptMask();
 
 		if(max_delay_ms){
 			r = rtos_mutex_lock_delay(mux->muxid, _ms_to_ticks(max_delay_ms));
@@ -328,7 +328,7 @@ static int _SemMux_Take(int type, void * priv, unsigned long max_delay_ms){
 		}
 
 	    /* JWX: safe to enable irqs */
-	    vPortClearInterruptMask(0);
+		//	    vPortClearInterruptMask(0);
 		rtos_enable_preempt();
 
 		break;
@@ -338,7 +338,7 @@ static int _SemMux_Take(int type, void * priv, unsigned long max_delay_ms){
 
 		rtos_disable_preempt();
 	    /* JWX: safe to disable irqs */
-	    ulPortSetInterruptMask();
+		//	    ulPortSetInterruptMask();
 
 
 		if( (mux->TskHoldCnt == 0 && rtos_get_mutex_holder(mux->muxid) == TASK_ID_INVALID) || (rtos_get_mutex_holder(mux->muxid) != TaskHolderId) ){
@@ -366,7 +366,7 @@ static int _SemMux_Take(int type, void * priv, unsigned long max_delay_ms){
 
 
 	    /* JWX: safe to enable irqs */
-	    vPortClearInterruptMask(0);
+		//	    vPortClearInterruptMask(0);
 		rtos_enable_preempt();
 
 		break;
@@ -377,7 +377,7 @@ static int _SemMux_Take(int type, void * priv, unsigned long max_delay_ms){
 
 		rtos_disable_preempt();
 	    /* JWX: safe to disable irqs */
-	    ulPortSetInterruptMask();
+		//	    ulPortSetInterruptMask();
 
 		if(max_delay_ms){
 			r = rtos_sem_wait_delay(sem->semid, _ms_to_ticks(max_delay_ms));
@@ -386,7 +386,7 @@ static int _SemMux_Take(int type, void * priv, unsigned long max_delay_ms){
 		}
 
 	    /* JWX: safe to enable irqs */
-	    vPortClearInterruptMask(0);
+		//	    vPortClearInterruptMask(0);
 		rtos_enable_preempt();
 
 		break;

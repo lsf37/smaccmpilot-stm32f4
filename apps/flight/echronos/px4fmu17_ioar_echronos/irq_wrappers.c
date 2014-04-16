@@ -42,10 +42,34 @@
 
 IRQ_WRAPPER_NAKED(I2C2_EV)
 IRQ_WRAPPER_NAKED(I2C2_ER)
-IRQ_WRAPPER_NAKED(SPI1)
+//IRQ_WRAPPER_NAKED(SPI1)
 IRQ_WRAPPER_NAKED(UART5)
 IRQ_WRAPPER_NAKED(USART1)
 IRQ_WRAPPER_NAKED(USART2)
 IRQ_WRAPPER_NAKED(USART6)
 IRQ_WRAPPER_NAKED(TIM1_UP_TIM10)
 IRQ_WRAPPER_NAKED(TIM1_CC)
+
+extern void SPI1_IRQHandler(void);
+extern void* _ssem;
+extern int fired;
+bool eChronos_SPI1_IRQHandler(void)
+{
+    SPI1_IRQHandler();
+    if(fired){
+        fired = 0;
+        rtos_irq_event_raise(IRQ_EVENT_ID_SPI1);
+        return true;
+    }
+    return false;
+}
+void SPI1_IRQHandler_wrapper(void)
+{
+    while (1) {
+        long dummy;
+        rtos_signal_wait_set(SIGNAL_SET_IRQ_SPI1);
+        //xSemaphoreGiveFromISR(_ssem, &dummy);
+        xSemaphoreGive(_ssem);
+    }
+}
+

@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 
+#include <assert.h>
 #include <stm32f4xx.h>
 
 #ifdef ECHRONOS
@@ -213,6 +214,8 @@ static inline void spi_device_deselect(struct spi_device *dev)
  * but the additional complexity doesn't warrant complicating this ISR
  * any further until we need the extra performance.
  */
+int fired = 0;
+void* _ssem = NULL;
 static void spi_irq(struct spi_bus *bus)
 {
   portBASE_TYPE should_yield = pdFALSE;
@@ -229,7 +232,9 @@ static void spi_irq(struct spi_bus *bus)
 
     if (bus->transfer.rx_len == 0) {
       spi_cr2_clear(bus, SPI_CR2_RXNEIE);
-      xSemaphoreGiveFromISR(bus->complete, &should_yield);
+      //      xSemaphoreGiveFromISR(bus->complete, &should_yield);
+      _ssem = bus->complete;
+      fired = 1;
     } else {
       spi_cr2_set(bus, SPI_CR2_TXEIE);
     }
@@ -247,6 +252,7 @@ static void spi_irq(struct spi_bus *bus)
 
   if (sr & SPI_ERROR_BITS) {
 #ifdef ERROR_LED
+    assert(!"SPI Error");
     pin_set(ERROR_LED);
 #endif
   }
