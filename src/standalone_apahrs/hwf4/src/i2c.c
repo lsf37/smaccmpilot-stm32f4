@@ -12,6 +12,8 @@
 #include <stddef.h>
 #include <string.h>
 
+#include <assert.h>
+
 #include <stm32f4xx.h>
 
 #ifdef ECHRONOS
@@ -234,8 +236,9 @@ bool i2c_read_reg(struct i2cdrv_t *drv, uint8_t addr, uint8_t reg,
     return i2c_transfer(drv, addr, &reg, 1, buf, len);
 }
 
-static void __i2c_event_irq_handler(struct i2cdrv_t *drv) {
+static void *__i2c_event_irq_handler(struct i2cdrv_t *drv) {
     portBASE_TYPE should_yield = pdFALSE;
+    void *deferred_sem = NULL;
 
     /* Read both status registers*/
     uint16_t sr1 = drv->hw->reg->SR1;
@@ -278,7 +281,7 @@ static void __i2c_event_irq_handler(struct i2cdrv_t *drv) {
         }
 
         if (drv->reading == 0) {
-            xSemaphoreGiveFromISR(drv->complete, &should_yield);
+            deferred_sem = drv->complete;
         }
     }
 
@@ -296,17 +299,21 @@ static void __i2c_event_irq_handler(struct i2cdrv_t *drv) {
             } else {
                 /* done reading: send stop */
                 __i2c_set_stop(drv);
-                xSemaphoreGiveFromISR(drv->complete, &should_yield);
+                assert(!deferred_sem);
+                deferred_sem = drv->complete;
             }
         }
     }
 
     if (should_yield)
         taskYIELD();
+
+    return deferred_sem;
 }
 
-static void __i2c_error_irq_handler(struct i2cdrv_t *drv) {
+static void *__i2c_error_irq_handler(struct i2cdrv_t *drv) {
     portBASE_TYPE should_yield = pdFALSE;
+    void *deferred_sem = NULL;
 
     /* Read SRs to clear them */
     drv->hw->reg->SR1;
@@ -318,38 +325,40 @@ static void __i2c_error_irq_handler(struct i2cdrv_t *drv) {
     __i2c_set_stop(drv);
     drv->error = 1;
 
-    xSemaphoreGiveFromISR(drv->complete, &should_yield);
+    deferred_sem = drv->complete;
 
     if (should_yield)
         taskYIELD();
+
+    return deferred_sem;
 }
 
 /* Static per-hw event handlers */
 
-void I2C1_EV_IRQHandler (void) {
-    __i2c_event_irq_handler(i2c1);
+void *I2C1_EV_IRQHandler (void) {
+    return __i2c_event_irq_handler(i2c1);
 }
 
-void I2C2_EV_IRQHandler (void) {
-    __i2c_event_irq_handler(i2c2);
+void *I2C2_EV_IRQHandler (void) {
+    return __i2c_event_irq_handler(i2c2);
 }
 
-void I2C3_EV_IRQHandler (void) {
-    __i2c_event_irq_handler(i2c3);
+void *I2C3_EV_IRQHandler (void) {
+    return __i2c_event_irq_handler(i2c3);
 }
 
 /* Static per-hw error handlers */
 
-void I2C1_ER_IRQHandler (void) {
-    __i2c_error_irq_handler(i2c1);
+void *I2C1_ER_IRQHandler (void) {
+    return __i2c_error_irq_handler(i2c1);
 }
 
-void I2C2_ER_IRQHandler (void) {
-    __i2c_error_irq_handler(i2c2);
+void *I2C2_ER_IRQHandler (void) {
+    return __i2c_error_irq_handler(i2c2);
 }
 
-void I2C3_ER_IRQHandler (void) {
-    __i2c_error_irq_handler(i2c3);
+void *I2C3_ER_IRQHandler (void) {
+    return __i2c_error_irq_handler(i2c3);
 }
 
 

@@ -2,6 +2,8 @@
 #include <stdint.h>
 #include <ctype.h>
 
+#include <assert.h>
+
 #include <eChronos.h>
 #include <rtos-kochab.h>
 
@@ -19,9 +21,37 @@
             }                                             \
         }
 
-
-
-
+#define IRQ_WRAPPER_DEFER_SEM(x) \
+        extern void *x##_IRQHandler(void);                \
+        static void *x##_sem;                             \
+        static int x##_sem_give_count;                    \
+        bool eChronos_##x##_IRQHandler(void)              \
+        {                                                 \
+            void *sem;                                    \
+            sem = x##_IRQHandler();                       \
+            if (sem) {                                    \
+                if (x##_sem_give_count) {                 \
+                    assert(sem == x##_sem);               \
+                } else {                                  \
+                    x##_sem = sem;                        \
+                }                                         \
+                x##_sem_give_count++;                     \
+                rtos_irq_event_raise(IRQ_EVENT_ID_##x);   \
+                return true;                              \
+            }                                             \
+            return false;                                 \
+        }                                                 \
+        void x##_IRQHandler_wrapper(void)                 \
+        {                                                 \
+            while (1) {                                   \
+                int i;                                    \
+                rtos_signal_wait_set(SIGNAL_SET_IRQ_##x); \
+                for (i = 0; i < x##_sem_give_count; i++) {/* XXX: locking? */ \
+                    xSemaphoreGive(x##_sem);              \
+                }                                         \
+                x##_sem_give_count = 0;                   \
+            }                                             \
+        }
 
 #define IRQ_WRAPPER(x) \
         bool eChronos_##x##_IRQHandler(void)              \
@@ -40,36 +70,13 @@
             }                                             \
         }
 
-IRQ_WRAPPER_NAKED(I2C2_EV)
-IRQ_WRAPPER_NAKED(I2C2_ER)
-//IRQ_WRAPPER_NAKED(SPI1)
+IRQ_WRAPPER_DEFER_SEM(I2C2_EV)
+IRQ_WRAPPER_DEFER_SEM(I2C2_ER)
+IRQ_WRAPPER_DEFER_SEM(SPI1)
 IRQ_WRAPPER_NAKED(UART5)
 IRQ_WRAPPER_NAKED(USART1)
 IRQ_WRAPPER_NAKED(USART2)
 IRQ_WRAPPER_NAKED(USART6)
 IRQ_WRAPPER_NAKED(TIM1_UP_TIM10)
 IRQ_WRAPPER_NAKED(TIM1_CC)
-
-extern void SPI1_IRQHandler(void);
-extern void* _ssem;
-extern int fired;
-bool eChronos_SPI1_IRQHandler(void)
-{
-    SPI1_IRQHandler();
-    if(fired){
-        fired = 0;
-        rtos_irq_event_raise(IRQ_EVENT_ID_SPI1);
-        return true;
-    }
-    return false;
-}
-void SPI1_IRQHandler_wrapper(void)
-{
-    while (1) {
-        long dummy;
-        rtos_signal_wait_set(SIGNAL_SET_IRQ_SPI1);
-        //xSemaphoreGiveFromISR(_ssem, &dummy);
-        xSemaphoreGive(_ssem);
-    }
-}
 

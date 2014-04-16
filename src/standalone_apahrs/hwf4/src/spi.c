@@ -214,12 +214,11 @@ static inline void spi_device_deselect(struct spi_device *dev)
  * but the additional complexity doesn't warrant complicating this ISR
  * any further until we need the extra performance.
  */
-int fired = 0;
-void* _ssem = NULL;
-static void spi_irq(struct spi_bus *bus)
+static void *spi_irq(struct spi_bus *bus)
 {
   portBASE_TYPE should_yield = pdFALSE;
   uint32_t sr = bus->dev->SR;
+  void *deferred_sem = NULL;
 
 #ifdef DEBUG_LED
   pin_set(DEBUG_LED);
@@ -232,9 +231,7 @@ static void spi_irq(struct spi_bus *bus)
 
     if (bus->transfer.rx_len == 0) {
       spi_cr2_clear(bus, SPI_CR2_RXNEIE);
-      //      xSemaphoreGiveFromISR(bus->complete, &should_yield);
-      _ssem = bus->complete;
-      fired = 1;
+      deferred_sem = bus->complete;
     } else {
       spi_cr2_set(bus, SPI_CR2_TXEIE);
     }
@@ -263,6 +260,8 @@ static void spi_irq(struct spi_bus *bus)
 
   if (should_yield == pdTRUE)
     taskYIELD();
+
+  return deferred_sem;
 }
 
 /*
@@ -448,17 +447,17 @@ struct spi_bus _spi3 = {
  * Interrupt Handlers
  */
 
-void SPI1_IRQHandler(void)
+void *SPI1_IRQHandler(void)
 {
-  spi_irq(spi1);
+  return spi_irq(spi1);
 }
 
-void SPI2_IRQHandler(void)
+void *SPI2_IRQHandler(void)
 {
-  spi_irq(spi2);
+  return spi_irq(spi2);
 }
 
-void SPI3_IRQHandler(void)
+void *SPI3_IRQHandler(void)
 {
-  spi_irq(spi3);
+  return spi_irq(spi3);
 }
