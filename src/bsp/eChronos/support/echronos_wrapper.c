@@ -69,7 +69,6 @@ portBASE_TYPE xSemaphoreGiveRecursive(xSemaphoreHandle xMuxId )
 
 signed portBASE_TYPE  xSemaphoreGiveFromISR(xSemaphoreHandle xMuxId,signed portBASE_TYPE * pxHigherPriorityTaskWoken ){
 
-  assert(!"xSemaphoreGiveFromISR");
 	*pxHigherPriorityTaskWoken = 0;
 
 	return xSemaphoreGive(xMuxId);;

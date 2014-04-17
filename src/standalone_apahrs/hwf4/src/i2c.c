@@ -30,9 +30,6 @@
 #include "hwf4/rcc.h"
 #include "hwf4/interrupt.h"
 
-// IK
-#define xSemaphoreGiveFromISR(x, y) xSemaphoreGive(x)
-
 struct i2chw_t {
     I2C_TypeDef* reg;
     enum RCCDevice dev;
