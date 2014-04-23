@@ -296,7 +296,7 @@ static void *__i2c_event_irq_handler(struct i2cdrv_t *drv) {
             } else {
                 /* done reading: send stop */
                 __i2c_set_stop(drv);
-                assert(!deferred_sem);
+                assert(!deferred_sem); /* XXX */
                 deferred_sem = drv->complete;
             }
         }

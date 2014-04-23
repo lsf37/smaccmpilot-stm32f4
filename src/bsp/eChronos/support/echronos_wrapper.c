@@ -66,12 +66,25 @@ portBASE_TYPE xSemaphoreGiveRecursive(xSemaphoreHandle xMuxId )
 	return eChronosMutexGiveRecursive(xMuxId);
 }
 
+/* XXX */
+extern int ivory_isr_sem_count;
+extern void *ivory_isr_sem_handle;
 
 signed portBASE_TYPE  xSemaphoreGiveFromISR(xSemaphoreHandle xMuxId,signed portBASE_TYPE * pxHigherPriorityTaskWoken ){
 
 	*pxHigherPriorityTaskWoken = 0;
 
+#if 1 /* XXX locking? */
+    if (ivory_isr_sem_count) {
+        assert(ivory_isr_sem_handle == xMuxId); /* XXX */
+    }
+    ivory_isr_sem_handle = xMuxId;
+    ivory_isr_sem_count++;
+
+    return true;
+#else
 	return xSemaphoreGive(xMuxId);;
+#endif
 }
 
 void* xSemaphoreGetMutexHolder( xSemaphoreHandle xMuxId)
