@@ -57,7 +57,10 @@ struct xSemMux_t{
 #define SEM_ID_sem00 0
 #endif
 
-#define xMUTEX_START			MUTEX_ID_m00
+/* Reserve MUTEX_ID_m00 for locking in this module */
+#define MUTEX_ID_LOCAL		MUTEX_ID_m00
+
+#define xMUTEX_START		(MUTEX_ID_LOCAL + 1)
 #define xMUTEX_END			MUTEX_ID_MAX
 #define xMUTEX_NUM			(xMUTEX_END + 1 - xMUTEX_START)
 #define xSEM_START			SEM_ID_sem00
@@ -119,7 +122,9 @@ static void xSemMux_init(void)
 	return;
 }
 
-static void * alloc_xSemMux(uint32_t type, int arg1, int arg2){
+static void * alloc_xSemMux(uint32_t type, int sem_max_count,
+		int sem_initial_count)
+{
 
 	void * priv = NULL;
 	int i = 0;
@@ -148,16 +153,16 @@ static void * alloc_xSemMux(uint32_t type, int arg1, int arg2){
 
 		if(xSemAssignID < xSEM_NUM_MAX){
 			xSemList[xSemAssignID].sem_type 		= type;
-			xSemList[xSemAssignID].max_count		= arg1;
-			xSemList[xSemAssignID].initial_count 	= arg2;
+			xSemList[xSemAssignID].max_count		= sem_max_count;
+			xSemList[xSemAssignID].initial_count 	= sem_initial_count;
 			xSemList[xSemAssignID].semid			= xSemAssignID;
 
-			if(arg2 > 0){
-				rtos_disable_preempt();
-				while(rtos_get_sem_value(xSemAssignID) < arg2){
+			if(sem_initial_count > 0){
+				rtos_mutex_lock(MUTEX_ID_LOCAL);
+				while(rtos_get_sem_value(xSemAssignID) < sem_initial_count){
 					rtos_sem_post(xSemAssignID);
 				}
-				rtos_enable_preempt();
+				rtos_mutex_unlock(MUTEX_ID_LOCAL);
 			}
 
 			priv = (void *) &xSemList[xSemAssignID];
@@ -317,9 +322,7 @@ static int _SemMux_Take(int type, void * priv, unsigned long max_delay_ms){
 	case BINARY_MUTEX:
 		mux = (struct MUX_t *) priv;
 
-		rtos_disable_preempt();
-	    /* JWX: safe to disable irqs */
-	    ulPortSetInterruptMask();
+		rtos_mutex_lock(MUTEX_ID_LOCAL);
 
 		if(max_delay_ms){
 			r = rtos_mutex_lock_delay(mux->muxid, _ms_to_ticks(max_delay_ms));
@@ -327,19 +330,14 @@ static int _SemMux_Take(int type, void * priv, unsigned long max_delay_ms){
 			r = rtos_mutex_try_lock(mux->muxid);
 		}
 
-	    /* JWX: safe to enable irqs */
-	    vPortClearInterruptMask(0);
-		rtos_enable_preempt();
+		rtos_mutex_unlock(MUTEX_ID_LOCAL);
 
 		break;
 
 	case RECURSIVE_MUTEX:
 		mux = (struct MUX_t *) priv;
 
-		rtos_disable_preempt();
-	    /* JWX: safe to disable irqs */
-	    ulPortSetInterruptMask();
-
+		rtos_mutex_lock(MUTEX_ID_LOCAL);
 
 		if( (mux->TskHoldCnt == 0 && rtos_get_mutex_holder(mux->muxid) == TASK_ID_INVALID) || (rtos_get_mutex_holder(mux->muxid) != TaskHolderId) ){
 			//take the mutex and update holder Id
@@ -364,10 +362,7 @@ static int _SemMux_Take(int type, void * priv, unsigned long max_delay_ms){
 #endif
 		}
 
-
-	    /* JWX: safe to enable irqs */
-	    vPortClearInterruptMask(0);
-		rtos_enable_preempt();
+		rtos_mutex_unlock(MUTEX_ID_LOCAL);
 
 		break;
 
@@ -375,9 +370,7 @@ static int _SemMux_Take(int type, void * priv, unsigned long max_delay_ms){
 	case COUNTING_SEMAPHORE:
 		sem = (struct SEM_t *)priv;
 
-		rtos_disable_preempt();
-	    /* JWX: safe to disable irqs */
-	    ulPortSetInterruptMask();
+		rtos_mutex_lock(MUTEX_ID_LOCAL);
 
 		if(max_delay_ms){
 			r = rtos_sem_wait_delay(sem->semid, _ms_to_ticks(max_delay_ms));
@@ -385,9 +378,7 @@ static int _SemMux_Take(int type, void * priv, unsigned long max_delay_ms){
 			r = rtos_sem_try_wait(sem->semid);
 		}
 
-	    /* JWX: safe to enable irqs */
-	    vPortClearInterruptMask(0);
-		rtos_enable_preempt();
+		rtos_mutex_unlock(MUTEX_ID_LOCAL);
 
 		break;
 	default:
@@ -413,16 +404,16 @@ static void _SemMux_Give(int type, void * priv)
 
 		mux = (struct MUX_t *) priv;
 
-		rtos_disable_preempt();
+		rtos_mutex_lock(MUTEX_ID_LOCAL);
 		rtos_mutex_unlock(mux->muxid);
-		rtos_enable_preempt();
+		rtos_mutex_unlock(MUTEX_ID_LOCAL);
 
 		break;
 
 	case RECURSIVE_MUTEX:
 		mux = (struct MUX_t *) priv;
 
-		rtos_disable_preempt();
+		rtos_mutex_lock(MUTEX_ID_LOCAL);
 
 		if(mux->TskHoldCnt != 0 && rtos_get_mutex_holder(mux->muxid) == TaskHolderId){
 			//mutex has been taken more than one time
@@ -438,7 +429,7 @@ static void _SemMux_Give(int type, void * priv)
 #endif
 		}
 
-		rtos_enable_preempt();
+		rtos_mutex_unlock(MUTEX_ID_LOCAL);
 
 		break;
 
@@ -447,13 +438,13 @@ static void _SemMux_Give(int type, void * priv)
 
 		sem = (struct SEM_t *)priv;
 
-		rtos_disable_preempt();
+		rtos_mutex_lock(MUTEX_ID_LOCAL);
 
 		if(rtos_get_sem_value(sem->semid) < sem->max_count){
 			rtos_sem_post(sem->semid);
 		}
 
-		rtos_enable_preempt();
+		rtos_mutex_unlock(MUTEX_ID_LOCAL);
 
 		break;
 
