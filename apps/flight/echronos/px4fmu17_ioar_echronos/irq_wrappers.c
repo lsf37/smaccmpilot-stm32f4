@@ -44,12 +44,17 @@
         void x##_IRQHandler_wrapper(void)                 \
         {                                                 \
             while (1) {                                   \
-                int i;                                    \
+                int i, give_count;                        \
+                void *give_sem;                           \
                 rtos_signal_wait_set(SIGNAL_SET_IRQ_##x); \
-                for (i = 0; i < x##_sem_give_count; i++) {/* XXX: locking? */ \
-                    xSemaphoreGive(x##_sem);              \
-                }                                         \
+                ulPortSetInterruptMask();                 \
+                give_count = x##_sem_give_count;          \
+                give_sem = x##_sem;                       \
                 x##_sem_give_count = 0;                   \
+                vPortClearInterruptMask(0);               \
+                for (i = 0; i < give_count; i++) {        \
+                    xSemaphoreGive(give_sem);             \
+                }                                         \
             }                                             \
         }
 
@@ -118,11 +123,19 @@ bool eChronos_UART5_IRQHandler(void)
 void UART5_IRQHandler_wrapper(void)
 {
     while (1) {
-        int i;
+        int i, give_count;
+        void *give_sem;
+
         rtos_signal_wait_set(SIGNAL_SET_IRQ_UART5);
-        for (i = 0; i < UART5_sem_give_count; i++) {/* XXX: locking? */
-            xSemaphoreGive(UART5_sem);
-        }
+
+        ulPortSetInterruptMask();
+        give_count = UART5_sem_give_count;
+        give_sem = UART5_sem;
         UART5_sem_give_count = 0;
+        vPortClearInterruptMask(0);
+
+        for (i = 0; i < give_count; i++) {
+            xSemaphoreGive(give_sem);
+        }
     }
 }

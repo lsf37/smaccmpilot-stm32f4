@@ -118,8 +118,8 @@ uint8_t rtos_get_sem_value(const SemId s);
 /*  APIs added for SMACCMpilot */
 TaskId rtos_get_mutex_holder(const MutexId s);
 TaskId rtos_get_current_task(void);
-void rtos_enable_interrupt(void);
-void rtos_disable_interrupt(void);
+//void rtos_enable_interrupt(void);
+//void rtos_disable_interrupt(void);
 bool rtos_tick_irq(void);
 unsigned long rtos_get_sys_tick(void);
 void rtos_enable_preempt(void);

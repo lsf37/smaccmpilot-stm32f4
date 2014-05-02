@@ -38,7 +38,6 @@ long _ms_to_ticks(long ms){
     return ms * 1;
 }
 
-#if 0
 __attribute__(( naked )) unsigned long ulPortSetInterruptMask( void )
 {
 	__asm volatile														\
@@ -65,7 +64,6 @@ __attribute__(( naked )) void vPortClearInterruptMask( unsigned long ulNewMaskVa
 		:::"r0"														\
 	);
 }
-#endif
 
 
 static unsigned long uxCriticalNesting = 0;
