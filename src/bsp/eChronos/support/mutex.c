@@ -57,11 +57,11 @@ struct xSemMux_t{
 #define SEM_ID_sem00 0
 #endif
 
-/* Reserve MUTEX_ID_m00 for locking in this module */
-#define MUTEX_ID_LOCAL		MUTEX_ID_m00
+/* Reserve MUTEX_ID_MAX for locking in this module */
+#define MUTEX_ID_LOCAL		MUTEX_ID_MAX
 
-#define xMUTEX_START		(MUTEX_ID_LOCAL + 1)
-#define xMUTEX_END			MUTEX_ID_MAX
+#define xMUTEX_START		MUTEX_ID_m00
+#define xMUTEX_END			(MUTEX_ID_MAX - 1)
 #define xMUTEX_NUM			(xMUTEX_END + 1 - xMUTEX_START)
 #define xSEM_START			SEM_ID_sem00
 #define xSEM_END			SEM_ID_MAX 

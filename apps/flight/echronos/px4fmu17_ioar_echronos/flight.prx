@@ -557,6 +557,7 @@
         <mutex><name>m68</name></mutex>
         <mutex><name>m69</name></mutex>
         <mutex><name>m70</name></mutex>
+        <mutex><name>m71</name></mutex>
       </mutexes>
 
       <semaphores>
