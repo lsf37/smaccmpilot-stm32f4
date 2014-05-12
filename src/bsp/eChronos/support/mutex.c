@@ -6,6 +6,7 @@
  */
 #include <stdlib.h>
 #include <stdio.h>
+#include <assert.h>
 
 #include "rtos-kochab.h"
 #include "mutex.h"
@@ -159,7 +160,7 @@ static void * alloc_xSemMux(uint32_t type, int sem_max_count,
 
 			if(sem_initial_count > 0){
 				rtos_mutex_lock(MUTEX_ID_LOCAL);
-				while(rtos_get_sem_value(xSemAssignID) < sem_initial_count){
+				while (rtos_get_sem_value(xSemAssignID) < sem_initial_count) {
 					rtos_sem_post(xSemAssignID);
 				}
 				rtos_mutex_unlock(MUTEX_ID_LOCAL);
@@ -312,17 +313,14 @@ static int _SemMux_Take(int type, void * priv, unsigned long max_delay_ms){
 	struct MUX_t * mux;
 	struct SEM_t * sem;
 
-	bool	r = pdTRUE;
+	bool r = pdTRUE;
 
-	uint8_t TaskHolderId = rtos_get_current_task();
+	uint8_t CurrentTaskId = rtos_get_current_task();
 
-
-	switch(type){
+	switch (type) {
 
 	case BINARY_MUTEX:
 		mux = (struct MUX_t *) priv;
-
-		rtos_mutex_lock(MUTEX_ID_LOCAL);
 
 		if(max_delay_ms){
 			r = rtos_mutex_lock_delay(mux->muxid, _ms_to_ticks(max_delay_ms));
@@ -330,47 +328,36 @@ static int _SemMux_Take(int type, void * priv, unsigned long max_delay_ms){
 			r = rtos_mutex_try_lock(mux->muxid);
 		}
 
-		rtos_mutex_unlock(MUTEX_ID_LOCAL);
-
 		break;
 
 	case RECURSIVE_MUTEX:
 		mux = (struct MUX_t *) priv;
 
-		rtos_mutex_lock(MUTEX_ID_LOCAL);
-
-		if( (mux->TskHoldCnt == 0 && rtos_get_mutex_holder(mux->muxid) == TASK_ID_INVALID) || (rtos_get_mutex_holder(mux->muxid) != TaskHolderId) ){
-			//take the mutex and update holder Id
-
-			if(max_delay_ms){
-				r = rtos_mutex_lock_delay(mux->muxid, _ms_to_ticks(max_delay_ms));
-			}else{
+		if (rtos_get_mutex_holder(mux->muxid) == CurrentTaskId) {
+			mux->TskHoldCnt++;
+		} else {
+			if (max_delay_ms) {
+				r = rtos_mutex_lock_delay(mux->muxid,
+						_ms_to_ticks(max_delay_ms));
+			} else {
 				r = rtos_mutex_try_lock(mux->muxid);
 			}
-			if(r == pdTRUE){
-				//mutex already been taken
-				//increment the counter
-				mux->TskHoldCnt ++;
+			if (r) {
+				/*
+				 * Holder let go of the mutex between the initial check and
+				 * the actual lock attempt, or there was no holder.
+				 * Either way, this task now owns it.
+				 */
+				assert(mux->TskHoldCnt == 0);
+				mux->TskHoldCnt++;
 			}
-
-		}else if(rtos_get_mutex_holder(mux->muxid) == TaskHolderId){
-			//increment the counter
-			mux->TskHoldCnt ++;
-		}else{
-#ifdef ECHRONOS_DEBUG_ENABLE
-			debug_println(": RECURSIVE_MUTEX Take FAULT!\n");
-#endif
 		}
-
-		rtos_mutex_unlock(MUTEX_ID_LOCAL);
 
 		break;
 
 	case SEMAPHORE:
 	case COUNTING_SEMAPHORE:
 		sem = (struct SEM_t *)priv;
-
-		rtos_mutex_lock(MUTEX_ID_LOCAL);
 
 		if(max_delay_ms){
 			r = rtos_sem_wait_delay(sem->semid, _ms_to_ticks(max_delay_ms));
@@ -378,82 +365,69 @@ static int _SemMux_Take(int type, void * priv, unsigned long max_delay_ms){
 			r = rtos_sem_try_wait(sem->semid);
 		}
 
-		rtos_mutex_unlock(MUTEX_ID_LOCAL);
-
 		break;
+
 	default:
+		r = pdFALSE;
 		break;
 	}
-
-
 
 	return r;
 }
 
 
-static void _SemMux_Give(int type, void * priv)
+static int _SemMux_Give(int type, void * priv)
 {
 	struct MUX_t * mux;
 	struct SEM_t * sem;
 
-	uint8_t TaskHolderId = rtos_get_current_task();
+	bool r = pdTRUE;
 
-	switch(type){
+	uint8_t CurrentTaskId = rtos_get_current_task();
+
+	switch (type) {
 
 	case BINARY_MUTEX:
 
 		mux = (struct MUX_t *) priv;
 
-		rtos_mutex_lock(MUTEX_ID_LOCAL);
 		rtos_mutex_unlock(mux->muxid);
-		rtos_mutex_unlock(MUTEX_ID_LOCAL);
 
 		break;
 
 	case RECURSIVE_MUTEX:
 		mux = (struct MUX_t *) priv;
 
-		rtos_mutex_lock(MUTEX_ID_LOCAL);
-
-		if(mux->TskHoldCnt != 0 && rtos_get_mutex_holder(mux->muxid) == TaskHolderId){
-			//mutex has been taken more than one time
-			mux->TskHoldCnt --;
-			//see if we actually need to release the mutex
-			if(mux->TskHoldCnt == 0){
+		if (rtos_get_mutex_holder(mux->muxid) == CurrentTaskId) {
+			assert(mux->TskHoldCnt > 0);
+			mux->TskHoldCnt--;
+			if (mux->TskHoldCnt == 0) {
 				rtos_mutex_unlock(mux->muxid);
 			}
-		}else{
-			//error!
-#ifdef ECHRONOS_DEBUG_ENABLE
-			debug_println(": RECURSIVE_MUTEX Give FAULT!\n");
-#endif
+		} else {
+			r = pdFALSE;
 		}
-
-		rtos_mutex_unlock(MUTEX_ID_LOCAL);
 
 		break;
 
 	case SEMAPHORE:
 	case COUNTING_SEMAPHORE:
-
 		sem = (struct SEM_t *)priv;
 
 		rtos_mutex_lock(MUTEX_ID_LOCAL);
-
-		if(rtos_get_sem_value(sem->semid) < sem->max_count){
+		if (rtos_get_sem_value(sem->semid) < sem->max_count) {
 			rtos_sem_post(sem->semid);
 		}
-
 		rtos_mutex_unlock(MUTEX_ID_LOCAL);
 
 		break;
 
 	default:
+		r = pdFALSE;
 		break;
 	}
 
-	return;
-
+	return r;
 }
 
 signed long eChronosMutexTake(void * handler, unsigned long xBlockTime)
@@ -469,8 +443,7 @@ signed long eChronosMutexGive(void * handler){
 
 	struct xSemMux_t * x = (struct xSemMux_t *) handler;
 	if(x->created){
-		_SemMux_Give(x->type, x->priv);
-		return pdTRUE;
+		return _SemMux_Give(x->type, x->priv);
 	}
 	return pdFALSE;
 }
@@ -489,8 +462,7 @@ long eChronosMutexGiveRecursive(void * handler)
 {
 	struct xSemMux_t * x = (struct xSemMux_t *) handler;
 	if(x->created){
-		_SemMux_Give(x->type, x->priv);
-		return pdTRUE;
+		return _SemMux_Give(x->type, x->priv);
 	}
 	return pdFALSE;
 
