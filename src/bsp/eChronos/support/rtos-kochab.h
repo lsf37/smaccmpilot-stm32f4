@@ -118,7 +118,6 @@ bool rtos_sem_post_max(SemId, int);
 bool rtos_sem_wait_delay(SemId,unsigned long);
 TaskId rtos_get_mutex_holder(const MutexId s);
 TaskId rtos_get_current_task(void);
-bool rtos_tick_irq(void);
 unsigned long rtos_get_sys_tick(void);
 void rtos_enable_preempt(void);
 void rtos_disable_preempt(void);
