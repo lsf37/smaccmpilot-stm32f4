@@ -105,21 +105,19 @@ SignalIdOption rtos_signal_poll_set(SignalSet signal_set);
 bool rtos_signal_peek_set(SignalSet signal_set);
 void rtos_irq_event_raise(IrqEventId);
 
-bool rtos_mutex_lock_delay(MutexId, unsigned long);
 void rtos_mutex_lock(MutexId);
 bool rtos_mutex_try_lock(MutexId);
 void rtos_mutex_unlock(MutexId);
 void rtos_sem_post(SemId);
 bool rtos_sem_try_wait(SemId);
 void rtos_sem_wait(SemId);
-bool rtos_sem_wait_delay(SemId,unsigned long);
-uint8_t rtos_get_sem_value(const SemId s);
 
 /*  APIs added for SMACCMpilot */
+bool rtos_mutex_lock_delay(MutexId, unsigned long);
+bool rtos_sem_post_max(SemId, int);
+bool rtos_sem_wait_delay(SemId,unsigned long);
 TaskId rtos_get_mutex_holder(const MutexId s);
 TaskId rtos_get_current_task(void);
-//void rtos_enable_interrupt(void);
-//void rtos_disable_interrupt(void);
 bool rtos_tick_irq(void);
 unsigned long rtos_get_sys_tick(void);
 void rtos_enable_preempt(void);

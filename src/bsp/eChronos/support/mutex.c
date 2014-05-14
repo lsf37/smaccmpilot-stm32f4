@@ -158,12 +158,8 @@ static void * alloc_xSemMux(uint32_t type, int sem_max_count,
 			xSemList[xSemAssignID].initial_count 	= sem_initial_count;
 			xSemList[xSemAssignID].semid			= xSemAssignID;
 
-			if(sem_initial_count > 0){
-				rtos_mutex_lock(MUTEX_ID_LOCAL);
-				while (rtos_get_sem_value(xSemAssignID) < sem_initial_count) {
-					rtos_sem_post(xSemAssignID);
-				}
-				rtos_mutex_unlock(MUTEX_ID_LOCAL);
+			for (i = 0; i < sem_initial_count; i++){
+				rtos_sem_post(xSemAssignID);
 			}
 
 			priv = (void *) &xSemList[xSemAssignID];
@@ -414,11 +410,7 @@ static int _SemMux_Give(int type, void * priv)
 	case COUNTING_SEMAPHORE:
 		sem = (struct SEM_t *)priv;
 
-		rtos_mutex_lock(MUTEX_ID_LOCAL);
-		if (rtos_get_sem_value(sem->semid) < sem->max_count) {
-			rtos_sem_post(sem->semid);
-		}
-		rtos_mutex_unlock(MUTEX_ID_LOCAL);
+		r = rtos_sem_post_max(sem->semid, sem->max_count);
 
 		break;
 
