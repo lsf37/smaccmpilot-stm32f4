@@ -7,6 +7,9 @@
 #include <eChronos.h>
 #include <rtos-kochab.h>
 
+void log_num(uint8_t c);
+void _log_num(uint8_t c);
+
 #define IRQ_WRAPPER_NAKED(x) \
         extern void x##_IRQHandler(void);                 \
         bool eChronos_##x##_IRQHandler(void)              \
@@ -36,6 +39,9 @@
                     x##_sem = sem;                        \
                 }                                         \
                 x##_sem_give_count++;                     \
+                if (SIGNAL_SET_IRQ_##x == SIGNAL_SET_IRQ_SPI1) { \
+                    _log_num(165);                  \
+                }                                   \
                 rtos_irq_event_raise(IRQ_EVENT_ID_##x);   \
                 return true;                              \
             }                                             \
@@ -53,6 +59,9 @@
                 x##_sem_give_count = 0;                   \
                 vPortClearInterruptMask(0);               \
                 for (i = 0; i < give_count; i++) {        \
+                    if (SIGNAL_SET_IRQ_##x == SIGNAL_SET_IRQ_SPI1) { \
+                        log_num(180);                  \
+                    }                                   \
                     xSemaphoreGive(give_sem);             \
                 }                                         \
             }                                             \

@@ -15,6 +15,8 @@ using namespace SMACCM;
 
 extern const AP_HAL::HAL& hal;
 
+extern "C" void log_num(uint8_t c);
+
 //////////////////////////////////////////////////////////////////////
 // SPI Device Driver
 
@@ -35,9 +37,11 @@ AP_HAL::Semaphore* SMACCMSPIDeviceDriver::get_semaphore()
 
 void SMACCMSPIDeviceDriver::transaction(const uint8_t *tx, uint8_t *rx, uint16_t len)
 {
+  log_num(240);
   if (spi_transfer(_bus, _device, 1000, tx, rx, len) < 0) {
     hal.scheduler->panic("PANIC: SPI transaction timeout.");
   }
+  log_num(245);
 }
 
 // XXX these methods are not implemented
