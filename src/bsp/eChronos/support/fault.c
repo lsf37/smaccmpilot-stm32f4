@@ -140,3 +140,15 @@ DEBUG_EXCEPTION(16)
 DEBUG_EXCEPTION(17)
 
 
+/* To catch failed pre/postcondition assertions */
+typedef uint8_t ErrorId;
+void
+fatal(ErrorId error_id)
+{
+    debug_print("FATAL ERROR: ");
+    debug_printhex32(error_id);
+    debug_println("");
+    for (;;)
+    {
+    }
+}

@@ -119,8 +119,3 @@ void eChronosTaskDelayUntil(unsigned long * const pxPreviousWakeTime, unsigned l
 		cur_time = rtos_get_sys_tick();
 	}
 }
-
-void eChronos_yield(void)
-{
-	rtos_yield();
-}

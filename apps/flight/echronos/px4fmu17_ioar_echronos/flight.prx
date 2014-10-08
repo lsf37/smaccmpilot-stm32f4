@@ -5,7 +5,6 @@
     <module name="armv7m.ctxt-switch" />
 
     <module name="armv7m.exception-preempt">
-      <handler>rtos_preempt_handler</handler>
       <trampolines>
 
          <!-- the interrupt handlers that can cause preemption:-->
@@ -62,8 +61,8 @@
 
       <!-- add wrapped systick irq handler to vectable: -->
       <systick>exception_preempt_trampoline_systick</systick>
-      <svcall>SVCHandler</svcall>
-      <pendsv>PendSVHandler</pendsv>
+      <svcall>svc_handler</svcall>
+      <pendsv>pendsv_handler</pendsv>
 
       <external_irqs>
         <external_irq>
@@ -117,6 +116,11 @@
     -->
 
     <module name="armv7m.rtos-kochab">
+      <!-- Uncomment to enable internal assertions -->
+      <!--
+      <internal_asserts>true</internal_asserts>
+      <fatal_error>fatal</fatal_error>
+      -->
       <prefix>rtos_</prefix>
       <taskid_size>8</taskid_size>
       <signalset_size>8</signalset_size>

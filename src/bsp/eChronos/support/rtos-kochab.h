@@ -95,7 +95,6 @@ extern "C" {
 #endif
 
 void rtos_start(void);
-void rtos_yield(void);
 
 
 
@@ -112,15 +111,14 @@ void rtos_sem_post(SemId);
 bool rtos_sem_try_wait(SemId);
 void rtos_sem_wait(SemId);
 
-/*  APIs added for SMACCMpilot */
+/* APIs added for SMACCMpilot */
 bool rtos_mutex_lock_delay(MutexId, unsigned long);
 bool rtos_sem_post_max(SemId, int);
-bool rtos_sem_wait_delay(SemId,unsigned long);
+bool rtos_sem_wait_delay(SemId, unsigned long);
 TaskId rtos_get_mutex_holder(const MutexId s);
+uint8_t rtos_get_sem_value(const SemId s);
 TaskId rtos_get_current_task(void);
 unsigned long rtos_get_sys_tick(void);
-void rtos_enable_preempt(void);
-void rtos_disable_preempt(void);
 
 #ifdef __cplusplus
 }

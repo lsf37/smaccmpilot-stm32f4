@@ -170,7 +170,6 @@ void vTaskDelayUntil( portTickType * const pxPreviousWakeTime, portTickType xTim
 
 void taskYIELD(void)
 {
-	eChronos_yield();
 }
 
 

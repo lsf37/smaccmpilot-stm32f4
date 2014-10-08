@@ -40,29 +40,22 @@ long _ms_to_ticks(long ms){
 
 __attribute__(( naked )) unsigned long ulPortSetInterruptMask( void )
 {
-	__asm volatile														\
-	(																	\
-		"	mrs r0, basepri											\n" \
-		"	mov r1, %0												\n"	\
-		"	msr basepri, r1											\n" \
-		"	bx lr													\n" \
-		:: "i" ( configMAX_SYSCALL_INTERRUPT_PRIORITY ) : "r0", "r1"	\
-	);
+    __asm volatile(
+            "cpsid i\n"
+            "bx lr\n"
+            );
 
-	/* This return will not be reached but is necessary to prevent compiler
-	warnings. */
-	return 0;
+    /* This return will not be reached but is necessary to prevent compiler
+     * warnings. */
+    return 0;
 }
-/*-----------------------------------------------------------*/
 
 __attribute__(( naked )) void vPortClearInterruptMask( unsigned long ulNewMaskValue )
 {
-	__asm volatile													\
-	(																\
-		"	msr basepri, r0										\n"	\
-		"	bx lr												\n" \
-		:::"r0"														\
-	);
+    __asm volatile(
+            "cpsie i\n"
+            "bx lr\n"
+            );
 }
 
 
@@ -70,8 +63,7 @@ static unsigned long uxCriticalNesting = 0;
 
 void vPortEnterCritical( void )
 {
-    rtos_disable_preempt();
-	//ulPortSetInterruptMask();
+    ulPortSetInterruptMask();
     uxCriticalNesting++;
 }
 
@@ -80,8 +72,7 @@ void vPortExitCritical( void )
 {
     --uxCriticalNesting;
     if( uxCriticalNesting == 0 ){
-        rtos_enable_preempt();
-    	//vPortClearInterruptMask(0);
+        vPortClearInterruptMask(0);
     }
 }
 
