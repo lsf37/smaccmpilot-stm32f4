@@ -87,9 +87,9 @@ signed portBASE_TYPE  xSemaphoreGiveFromISR(xSemaphoreHandle xMuxId,signed portB
 #endif
 }
 
-void* xSemaphoreGetMutexHolder( xSemaphoreHandle xMuxId)
+bool xSemaphoreMutexHolderIsCurrent(xSemaphoreHandle xMuxId)
 {
-	return eChronosGetMutexHolder(xMuxId);
+	return eChronosMutexHolderIsCurrent(xMuxId);
 }
 
 void vSemaphoreDelete( xSemaphoreHandle xSemaphore)

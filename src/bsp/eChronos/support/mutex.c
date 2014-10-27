@@ -311,8 +311,6 @@ static int _SemMux_Take(int type, void * priv, unsigned long max_delay_ms){
 
 	bool r = pdTRUE;
 
-	uint8_t CurrentTaskId = rtos_get_current_task();
-
 	switch (type) {
 
 	case BINARY_MUTEX:
@@ -329,7 +327,7 @@ static int _SemMux_Take(int type, void * priv, unsigned long max_delay_ms){
 	case RECURSIVE_MUTEX:
 		mux = (struct MUX_t *) priv;
 
-		if (rtos_get_mutex_holder(mux->muxid) == CurrentTaskId) {
+		if (rtos_mutex_holder_is_current(mux->muxid)) {
 			mux->TskHoldCnt++;
 		} else {
 			if (max_delay_ms) {
@@ -379,8 +377,6 @@ static int _SemMux_Give(int type, void * priv)
 
 	bool r = pdTRUE;
 
-	uint8_t CurrentTaskId = rtos_get_current_task();
-
 	switch (type) {
 
 	case BINARY_MUTEX:
@@ -394,7 +390,7 @@ static int _SemMux_Give(int type, void * priv)
 	case RECURSIVE_MUTEX:
 		mux = (struct MUX_t *) priv;
 
-		if (rtos_get_mutex_holder(mux->muxid) == CurrentTaskId) {
+		if (rtos_mutex_holder_is_current(mux->muxid)) {
 			assert(mux->TskHoldCnt > 0);
 			mux->TskHoldCnt--;
 			if (mux->TskHoldCnt == 0) {
@@ -459,21 +455,18 @@ long eChronosMutexGiveRecursive(void * handler)
 	return pdFALSE;
 
 }
-void * eChronosGetMutexHolder(void * handler)
+
+bool eChronosMutexHolderIsCurrent(void * handler)
 {
 	struct xSemMux_t * x = (struct xSemMux_t *) handler;
 	if(x->created == 1){
 		struct MUX_t * mux = (struct MUX_t *) x->priv;
-		if(rtos_get_mutex_holder(mux->muxid) == TASK_ID_INVALID){
-			return NULL;
-		}
-		return eChronosGetTaskHandler(rtos_get_mutex_holder(mux->muxid));
-	}else{
+		return rtos_mutex_holder_is_current(mux->muxid);
+	} else{
 #ifdef ECHRONOS_DEBUG_ENABLE
-		debug_println("eChronosGetMutexHolder fault\n");
+		debug_println("eChronosMutexHolderIsCurrent fault\n");
 #endif
 		return NULL;
 	}
 }
-
 

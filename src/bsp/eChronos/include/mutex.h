@@ -16,7 +16,7 @@ signed long eChronosMutexTake(void * xMuxId, unsigned long xBlockTime);
 signed long eChronosMutexGive(void * xMuxId);
 long eChronosMutexTakeRecursive(void * xMutex, unsigned long xBlockTime);
 long eChronosMutexGiveRecursive(void * xMutex);
-void * eChronosGetMutexHolder(void * xMuxId);
+bool eChronosMutexHolderIsCurrent(void * xMuxId);
 
 
 #endif /* MUTEX_H_ */

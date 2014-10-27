@@ -54,7 +54,6 @@ extern int _taskid_count;
 
 #define TASK_ID_C(x) ((TaskId) UINT8_C(x))
 #define TASK_ID_ZERO TASK_ID_C(0)
-#define TASK_ID_INVALID ((TaskId) TASK_ID_C(UINT8_MAX))
 #define TASK_ID_MAX_NUM TASK_ID_C(_taskid_count)
 #define TASK_ID_MAX TASK_ID_C(TASK_ID_MAX_NUM - 1)
 
@@ -115,7 +114,7 @@ void rtos_sem_wait(SemId);
 bool rtos_mutex_lock_delay(MutexId, unsigned long);
 bool rtos_sem_post_max(SemId, int);
 bool rtos_sem_wait_delay(SemId, unsigned long);
-TaskId rtos_get_mutex_holder(const MutexId s);
+bool rtos_mutex_holder_is_current(const MutexId s);
 uint8_t rtos_get_sem_value(const SemId s);
 TaskId rtos_get_current_task(void);
 unsigned long rtos_get_sys_tick(void);
