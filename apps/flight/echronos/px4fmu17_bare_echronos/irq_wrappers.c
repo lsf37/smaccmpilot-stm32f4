@@ -79,8 +79,8 @@
 IRQ_WRAPPER_DEFER_SEM(I2C2_EV)
 IRQ_WRAPPER_DEFER_SEM(I2C2_ER)
 IRQ_WRAPPER_DEFER_SEM(SPI1)
-//IRQ_WRAPPER_NAKED(UART5)
-IRQ_WRAPPER_NAKED(USART1)
+IRQ_WRAPPER_NAKED(UART5)
+//IRQ_WRAPPER_NAKED(USART1)
 // IRQ_WRAPPER_NAKED(USART2)
 IRQ_WRAPPER_NAKED(USART6)
 IRQ_WRAPPER_NAKED(TIM1_UP_TIM10)
@@ -89,31 +89,31 @@ IRQ_WRAPPER_NAKED(TIM1_CC)
 int ivory_isr_sem_count = 0;
 void *ivory_isr_sem_handle = NULL;
 
-extern void UART5_IRQHandler(void);
-static void *UART5_sem;
-static int UART5_sem_give_count;
+extern void USART1_IRQHandler(void);
+static void *USART1_sem;
+static int USART1_sem_give_count;
 
-bool eChronos_UART5_IRQHandler(void)
+bool eChronos_USART1_IRQHandler(void)
 {
     assert(ivory_isr_sem_count == 0);
     assert(ivory_isr_sem_handle == NULL);
 
-    UART5_IRQHandler();
+    USART1_IRQHandler();
 
     if (ivory_isr_sem_count > 1) {
         assert(ivory_isr_sem_count <= 1); /* XXX */
     }
 
     if (ivory_isr_sem_count) {
-        if (UART5_sem_give_count) {
-            assert(ivory_isr_sem_handle == UART5_sem); /* XXX */
+        if (USART1_sem_give_count) {
+            assert(ivory_isr_sem_handle == USART1_sem); /* XXX */
         } else {
-            UART5_sem = ivory_isr_sem_handle;
+            USART1_sem = ivory_isr_sem_handle;
         }
         ivory_isr_sem_handle = NULL;
-        UART5_sem_give_count += ivory_isr_sem_count;
+        USART1_sem_give_count += ivory_isr_sem_count;
         ivory_isr_sem_count = 0;
-        rtos_irq_event_raise(IRQ_EVENT_ID_UART5);
+        rtos_irq_event_raise(IRQ_EVENT_ID_USART1);
         return true;
     }
 
@@ -121,18 +121,18 @@ bool eChronos_UART5_IRQHandler(void)
 }
 
 /* NB: this is just the same as the version in DEFER_SEM macro */
-void UART5_IRQHandler_wrapper(void)
+void USART1_IRQHandler_wrapper(void)
 {
     while (1) {
         int i, give_count;
         void *give_sem;
 
-        rtos_signal_wait_set(SIGNAL_SET_IRQ_UART5);
+        rtos_signal_wait_set(SIGNAL_SET_IRQ_USART1);
 
         ulPortSetInterruptMask();
-        give_count = UART5_sem_give_count;
-        give_sem = UART5_sem;
-        UART5_sem_give_count = 0;
+        give_count = USART1_sem_give_count;
+        give_sem = USART1_sem;
+        USART1_sem_give_count = 0;
         vPortClearInterruptMask(0);
 
         for (i = 0; i < give_count; i++) {
