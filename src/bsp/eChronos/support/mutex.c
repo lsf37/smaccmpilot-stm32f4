@@ -40,7 +40,6 @@ struct MUX_t{
 struct SEM_t{
 	int 		sem_type;
 	uint8_t 	semid;
-	int 		max_count;
 	int 		initial_count;
 };
 
@@ -98,7 +97,6 @@ static void xSem_init(void){
 
 	for(i = 0; i < xSEM_NUM_MAX; i++){
 		xSemList[i].sem_type 		= SEMAPHORE;
-		xSemList[i].max_count		= 0;
 		xSemList[i].initial_count 	= 0;
 		xSemList[i].semid			= -1;		//default
 	}
@@ -154,9 +152,10 @@ static void * alloc_xSemMux(uint32_t type, int sem_max_count,
 
 		if(xSemAssignID < xSEM_NUM_MAX){
 			xSemList[xSemAssignID].sem_type 		= type;
-			xSemList[xSemAssignID].max_count		= sem_max_count;
 			xSemList[xSemAssignID].initial_count 	= sem_initial_count;
 			xSemList[xSemAssignID].semid			= xSemAssignID;
+
+			rtos_sem_max_init(xSemAssignID, sem_max_count);
 
 			for (i = 0; i < sem_initial_count; i++){
 				rtos_sem_post(xSemAssignID);
@@ -410,7 +409,7 @@ static int _SemMux_Give(int type, void * priv)
 	case COUNTING_SEMAPHORE:
 		sem = (struct SEM_t *)priv;
 
-		r = rtos_sem_post_max(sem->semid, sem->max_count);
+		rtos_sem_post(sem->semid);
 
 		break;
 

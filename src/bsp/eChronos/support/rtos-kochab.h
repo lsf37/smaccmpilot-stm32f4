@@ -113,10 +113,9 @@ void rtos_sem_wait(SemId);
 
 /* APIs added for SMACCMpilot */
 bool rtos_mutex_lock_delay(MutexId, unsigned long);
-bool rtos_sem_post_max(SemId, int);
+bool rtos_sem_max_init(SemId, int);
 bool rtos_sem_wait_delay(SemId, unsigned long);
 TaskId rtos_get_mutex_holder(const MutexId s);
-uint8_t rtos_get_sem_value(const SemId s);
 TaskId rtos_get_current_task(void);
 unsigned long rtos_get_sys_tick(void);
 
