@@ -116,8 +116,10 @@
     -->
 
     <module name="armv7m.rtos-kochab">
-      <!-- Uncomment to enable internal assertions -->
+      <!-- Uncomment to enable eChronos internal assertions -->
+      <!--
       <internal_asserts>true</internal_asserts>
+      -->
       <fatal_error>fatal</fatal_error>
       <prefix>rtos_</prefix>
       <taskid_size>8</taskid_size>
