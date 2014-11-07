@@ -29,15 +29,6 @@ recoveryTower commsec_info_snk monitor_result_src =
 
 --------------------------------------------------------------------------------
 
-type Time   = Uint32
-type Idx    = Sint32
-type BufLen = 30
-type CirBuf = Array BufLen (Stored Time)
-
-alarm_threshold :: Time
-alarm_threshold = 40000
---------------------------------------------------------------------------------
-
 -- | True is OK, False is an alarm.
 commsecRecoveryTask :: DataSink   (Struct "veh_commsec_msg")
                     -> DataSource (Stored C.CommsecStatus)
@@ -46,80 +37,22 @@ commsecRecoveryTask commsec_info_snk monitor_result_src = do
   commsec_info_snk_rx <- withDataReader commsec_info_snk "commsec_info_snk"
   monitor_res_tx      <- withDataWriter monitor_result_src "comm_mon_res"
 
-  -- For our property, we'll store timestamps in an array.
-  cirBuf   <- taskLocalInit "cirBuf"  (iarray [] :: Init CirBuf)
-  -- Points to the last written-to cell.
-  idx      <- taskLocalInit "idx"     (ival 0 :: Init (Stored Idx))
-  -- Have we filled the buffer once (at which point, "mod" semantics are used).
-  bufFull  <- taskLocalInit "bufFull" (ival false)
-  -- Number bad seen on last dataport read.
-  numBad   <- taskLocalInit "numBad"  (ival 0 :: Init (Stored Uint32))
-  timer    <- withGetTimeMillis
   -- Property result
   result   <- taskLocalInit "result" (ival C.secure)
 
   onPeriod 20 $ \_now -> do
     commsecReader <- local izero
     readData commsec_info_snk_rx commsecReader
-    commsecMonitor commsecReader cirBuf idx bufFull numBad timer result
+    commsecMonitor commsecReader result
     writeData monitor_res_tx (constRef result)
 
   taskModuleDef $ do
     depend V.vehCommsecModule
 
   where
-  -- XXX let's make up an arbitrary monitor here.  If we're received more than
-  -- 10 bad messages in less than 20 seconds.
-  commsecMonitor rx cirBuf idx bufFullRef prevBadRef timer resRef = do
+  -- Set alarm if we've received 1 bad message (ever).
+  commsecMonitor rx resRef = do
     totalBadMsgs <- rx ~>* V.bad_msgs
-    lastTime     <- getTimeMillis timer
-    prevBad      <- deref prevBadRef
-    let currBad  = totalBadMsgs - prevBad
-    store prevBadRef totalBadMsgs
-    -- Store new values and check properties
-    newTimeStamps currBad lastTime idx cirBuf bufFullRef resRef
-
-  newTimeStamps numBadVals t idxRef arr bufFullRef resRef =
-    -- For each bad value, we'll store the current timestamp, if we missed
-    -- capturing it.
-    times (toIx numBadVals :: Ix BufLen)
-      $ const
-      $ do res <- deref resRef
-           -- If res has already failed, do nothing.
-           when (res ==? C.secure)
-              (newTimeStamp t idxRef arr bufFullRef >>= store resRef)
-
-  newTimeStamp :: (GetAlloc eff ~ Scope s)
-               => Time
-               -> Ref s0 (Stored Idx)
-               -> Ref s1 (Array BufLen (Stored Time))
-               -> Ref s2 (Stored IBool)
-               -> Ivory eff C.CommsecStatus
-  newTimeStamp t idxRef arr bufFullRef = do
-    idx <- deref idxRef
-    store (arr ! toIx idx) t
-    res <- checkProp idx arr bufFullRef
-    -- Update index
-    let idx' = incrIdx idx arr
-    store idxRef idx'
-    -- Update buffer full Boolean
-    bufFull <- deref bufFullRef
-    store bufFullRef (bufFull .|| (idx' ==? 0))
-    return (res ? (C.secure, C.alarm))
-
-  incrIdx :: Idx -> Ref s CirBuf -> Idx
-  incrIdx idx arr = (idx + 1) .% arrayLen arr
-
-  -- False if it fails.
-  checkProp :: (GetAlloc eff ~ Scope s)
-            => Idx -> Ref s0 CirBuf -> Ref s1 (Stored IBool) -> Ivory eff IBool
-  checkProp idx arr bufFullRef = do
-    bufFull <- deref bufFullRef
-    ifte (iNot bufFull) -- Haven't filled the buffer yet.
-      (return true)
-      (do tnow  <- deref (arr ! toIx idx)
-          t0    <- deref (arr ! toIx (startIdx idx arr))
-          return (tnow - t0 >? alarm_threshold))
-    where
-    -- Get the start index in the circular buffer.  Assumes buffer is full.
-    startIdx = incrIdx
+    ifte_ (totalBadMsgs ==? 0)
+      (store resRef C.secure)
+      (store resRef C.alarm)
