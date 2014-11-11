@@ -99,8 +99,8 @@ blinkOutput state phase = return (iNot switchState) -- XXX HACK FOR INVERTED EXT
     where aux res s = (state ==? (fromIntegral s)) ? (switchPhase s, res)
   switchPhase s = foldl aux false [0..7]
     where aux res n = (phase ==? (fromIntegral n)) ? (((t !! s) !! n), res)
-  t = [ [  true,  true,  true,  true,  true,  true,  true,  true ]  -- 0 longduration_longperiod
+  t = [ [  true,  true,  false,  true,  true,  true,  false,  true ]  -- 0 longduration_longperiod
       , [  true, false, false, false, false, false, false, false ]  -- 1 shortduration_longperiod
-      , [  true, false, false, false,  true, false, false, false ]] -- 2 shortduration_shortperiod
+      , [  false, false, false, false, false, false, false, false ]] -- 2 shortduration_shortperiod
 
 
