@@ -30,7 +30,7 @@ CONFIG_ECHRONOS_PREFIX := ../../echronos-smaccm
 
 # Set this variable when using the bootloader on the PX4FMU,
 # unset if flashing purely via JTAG.
-CONFIG_PX4FMU_BOOTLOADER := 1
+# CONFIG_PX4FMU_BOOTLOADER := 1
 
 # Semantics for assertions in Ivory-generated code caused by using --div-zero,
 # --overflow, etc. flags.  Current options:
