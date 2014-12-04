@@ -12,13 +12,11 @@
 #include "queue.h"
 #include "port.h"
 #include <assert.h>
+#include <stdbool.h>
 
 #define UNIMPLEMENTED() assert(!"UNIMPLEMENETED");
 #define vNOP() UNIMPLEMENTED()
 #define NOP(type) do { UNIMPLEMENTED(); return (type)0; } while(0)
-
-extern unsigned long rtos_get_sys_tick(void);
-
 
 void portENTER_CRITICAL(void)
 {
@@ -87,9 +85,9 @@ signed portBASE_TYPE  xSemaphoreGiveFromISR(xSemaphoreHandle xMuxId,signed portB
 #endif
 }
 
-void* xSemaphoreGetMutexHolder( xSemaphoreHandle xMuxId)
+bool xSemaphoreMutexHolderIsCurrent( xSemaphoreHandle xMuxId)
 {
-	return eChronosGetMutexHolder(xMuxId);
+	return eChronosMutexHolderIsCurrent(xMuxId);
 }
 
 void vSemaphoreDelete( xSemaphoreHandle xSemaphore)
@@ -158,7 +156,7 @@ portTickType xTaskGetTickCount(void)
 
 void vTaskDelay( portTickType xMsToDelay )
 {
-	unsigned long curTime = rtos_get_sys_tick();
+	unsigned long curTime = rtos_timer_current_ticks;
 	eChronosTaskDelayUntil(&curTime, xMsToDelay);
 
 }

@@ -18,11 +18,9 @@
 #define pdTRUE		1
 #define pdFALSE		0
 
-extern bool rtos_sem_wait_delay(SemId,unsigned long);
-
-//extern void debug_println(const char *msg);
-
-//extern void debug_printhex32(uint32_t val);
+/* XXX: why do we need the +1 here? -robs. */
+#define MUX_ID_COUNT (RTOS_MUTEX_ID_MAX + 1)
+#define SEM_ID_COUNT (RTOS_SEM_ID_MAX + 1)
 
 enum{
 	BINARY_MUTEX = 1,
@@ -57,14 +55,11 @@ struct xSemMux_t{
 #define SEM_ID_sem00 0
 #endif
 
-/* Reserve MUTEX_ID_MAX for locking in this module */
-#define MUTEX_ID_LOCAL		MUTEX_ID_MAX
-
 #define xMUTEX_START		MUTEX_ID_m00
-#define xMUTEX_END			(MUTEX_ID_MAX - 1)
+#define xMUTEX_END			(RTOS_MUTEX_ID_MAX - 1)
 #define xMUTEX_NUM			(xMUTEX_END + 1 - xMUTEX_START)
 #define xSEM_START			SEM_ID_sem00
-#define xSEM_END			SEM_ID_MAX 
+#define xSEM_END			RTOS_SEM_ID_MAX
 #define xSEM_NUM		 	(xSEM_END + 1 - xSEM_START)	
 
 #define xMUTEX_NUM_MAX			xMUTEX_NUM
@@ -107,9 +102,9 @@ static void xSem_init(void){
 static void xSemMux_init(void)
 {
 	int i = 0;
-    xMuxList = malloc(sizeof(*xMuxList) * _muxid_count);
-    xSemList = malloc(sizeof(*xSemList) * _semid_count);
-    xSemMuxList = malloc(sizeof(*xSemMuxList) * (_muxid_count + _semid_count));
+    xMuxList = malloc(sizeof(*xMuxList) * MUX_ID_COUNT);
+    xSemList = malloc(sizeof(*xSemList) * SEM_ID_COUNT);
+    xSemMuxList = malloc(sizeof(*xSemMuxList) * (MUX_ID_COUNT + SEM_ID_COUNT));
 	xMux_init();
 	xSem_init();
 
@@ -310,7 +305,7 @@ static int _SemMux_Take(int type, void * priv, unsigned long max_delay_ms){
 
 	bool r = pdTRUE;
 
-	uint8_t CurrentTaskId = rtos_get_current_task();
+	uint8_t CurrentTaskId = rtos_task_current();
 
 	switch (type) {
 
@@ -318,7 +313,7 @@ static int _SemMux_Take(int type, void * priv, unsigned long max_delay_ms){
 		mux = (struct MUX_t *) priv;
 
 		if(max_delay_ms){
-			r = rtos_mutex_lock_delay(mux->muxid, _ms_to_ticks(max_delay_ms));
+			r = rtos_mutex_lock_timeout(mux->muxid, _ms_to_ticks(max_delay_ms));
 		}else{
 			r = rtos_mutex_try_lock(mux->muxid);
 		}
@@ -328,11 +323,11 @@ static int _SemMux_Take(int type, void * priv, unsigned long max_delay_ms){
 	case RECURSIVE_MUTEX:
 		mux = (struct MUX_t *) priv;
 
-		if (rtos_get_mutex_holder(mux->muxid) == CurrentTaskId) {
+		if (rtos_mutex_holder_is_current(mux->muxid)) {
 			mux->TskHoldCnt++;
 		} else {
 			if (max_delay_ms) {
-				r = rtos_mutex_lock_delay(mux->muxid,
+				r = rtos_mutex_lock_timeout(mux->muxid,
 						_ms_to_ticks(max_delay_ms));
 			} else {
 				r = rtos_mutex_try_lock(mux->muxid);
@@ -355,7 +350,7 @@ static int _SemMux_Take(int type, void * priv, unsigned long max_delay_ms){
 		sem = (struct SEM_t *)priv;
 
 		if(max_delay_ms){
-			r = rtos_sem_wait_delay(sem->semid, _ms_to_ticks(max_delay_ms));
+			r = rtos_sem_wait_timeout(sem->semid, _ms_to_ticks(max_delay_ms));
 		}else{
 			r = rtos_sem_try_wait(sem->semid);
 		}
@@ -378,7 +373,7 @@ static int _SemMux_Give(int type, void * priv)
 
 	bool r = pdTRUE;
 
-	uint8_t CurrentTaskId = rtos_get_current_task();
+	uint8_t CurrentTaskId = rtos_task_current();
 
 	switch (type) {
 
@@ -393,7 +388,7 @@ static int _SemMux_Give(int type, void * priv)
 	case RECURSIVE_MUTEX:
 		mux = (struct MUX_t *) priv;
 
-		if (rtos_get_mutex_holder(mux->muxid) == CurrentTaskId) {
+		if (rtos_mutex_holder_is_current(mux->muxid)) {
 			assert(mux->TskHoldCnt > 0);
 			mux->TskHoldCnt--;
 			if (mux->TskHoldCnt == 0) {
@@ -458,20 +453,17 @@ long eChronosMutexGiveRecursive(void * handler)
 	return pdFALSE;
 
 }
-void * eChronosGetMutexHolder(void * handler)
+bool eChronosMutexHolderIsCurrent(void * handler)
 {
 	struct xSemMux_t * x = (struct xSemMux_t *) handler;
 	if(x->created == 1){
 		struct MUX_t * mux = (struct MUX_t *) x->priv;
-		if(rtos_get_mutex_holder(mux->muxid) == TASK_ID_INVALID){
-			return NULL;
-		}
-		return eChronosGetTaskHandler(rtos_get_mutex_holder(mux->muxid));
+		return rtos_mutex_holder_is_current(mux->muxid);
 	}else{
 #ifdef ECHRONOS_DEBUG_ENABLE
 		debug_println("eChronosGetMutexHolder fault\n");
 #endif
-		return NULL;
+		return false;
 	}
 }
 

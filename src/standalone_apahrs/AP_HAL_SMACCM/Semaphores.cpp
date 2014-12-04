@@ -11,7 +11,7 @@ extern const AP_HAL::HAL& hal;
 static bool already_held(xSemaphoreHandle sem)
 {
   xTaskHandle self = xTaskGetCurrentTaskHandle();
-  return xSemaphoreGetMutexHolder(sem) == self;
+  return xSemaphoreMutexHolderIsCurrent(sem);
 }
 
 SMACCMSemaphore::SMACCMSemaphore()

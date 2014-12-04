@@ -22,7 +22,7 @@ extern void UNIMPLEMENTED(void);
 #define NOP(type) do { UNIMPLEMENTED(); return (type)0; } while(0)
 
 
-#define	TASK_NUM_MAX	(TASK_ID_MAX + 1)
+#define	TASK_NUM_MAX	(RTOS_TASK_ID_MAX + 1)
 
 static int assignTskId = 0;
 
@@ -83,7 +83,7 @@ void eChronosStartRTOS(void)
 
 void * eChronosGetCurrentTaskHandler( void )
 {
-	uint8_t tskId = rtos_get_current_task();
+	uint8_t tskId = rtos_task_current();
 	return (void*)&xTaskList[tskId];
 }
 
@@ -94,7 +94,7 @@ void * eChronosGetTaskHandler(uint8_t tskId)
 
 unsigned long eChronosGetSysTick(void)
 {
-	return rtos_get_sys_tick();
+	return rtos_timer_current_ticks;
 }
 
 
@@ -104,7 +104,7 @@ static int first_time_call_on_delay = 1;
 
 void eChronosTaskDelayUntil(unsigned long * const pxPreviousWakeTime, unsigned long xTimeIncrement)
 {
-	unsigned long cur_time = rtos_get_sys_tick();
+	unsigned long cur_time = rtos_timer_current_ticks;
 	unsigned long wake_time = *pxPreviousWakeTime + xTimeIncrement;
 
 	if(first_time_call_on_delay || BlockOnDelay_sem == NULL){
@@ -116,6 +116,15 @@ void eChronosTaskDelayUntil(unsigned long * const pxPreviousWakeTime, unsigned l
 	while(wake_time > cur_time){
 		//error, wait again
 		eChronosMutexTake(BlockOnDelay_sem, wake_time - cur_time);
-		cur_time = rtos_get_sys_tick();
+		cur_time = rtos_timer_current_ticks;
 	}
+}
+
+/* XXX: Is there a better place to put this? */
+bool
+echronos_systick(void)
+{
+    rtos_timer_tick();
+
+    return true;
 }

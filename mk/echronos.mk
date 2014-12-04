@@ -17,7 +17,7 @@ ECHRONOS_PATH=$(CONFIG_ECHRONOS_PREFIX)
 ECHRONOS_PACKAGE=$(ECHRONOS_PATH)/share/packages
 PRJ=$(realpath $(CONFIG_ECHRONOS_PRJ)/prj)
 
-ECHRONOS_RAW_OBJECTS := ctxt-switch.o               \
+ECHRONOS_RAW_OBJECTS := ctxt-switch-preempt.o       \
                         armv7m.exception-preempt.o  \
                         generic.debug.o             \
                         rtos-kochab.o               \

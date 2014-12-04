@@ -32,7 +32,7 @@ void main_task(void *arg __attribute__ ((unused)))
     hal.init(0, NULL);
     tower_entry();
     while(1){
-        rtos_sem_wait(SEM_ID_init_sem);
+        rtos_sem_wait(RTOS_SEM_ID_INIT_SEM);
     }
 }
 

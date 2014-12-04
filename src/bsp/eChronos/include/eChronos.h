@@ -11,6 +11,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include "stm32f4xx.h"
 #include "core_cm4.h"
 #include "port.h"
@@ -93,7 +94,7 @@ signed portBASE_TYPE xSemaphoreGive(xSemaphoreHandle xMuxId);
 portBASE_TYPE xSemaphoreTakeRecursive(xSemaphoreHandle xMutex,portTickType xBlockTime );
 portBASE_TYPE xSemaphoreGiveRecursive(xSemaphoreHandle xMutex );
 signed portBASE_TYPE  xSemaphoreGiveFromISR(xSemaphoreHandle xMuxId,signed portBASE_TYPE * pxHigherPriorityTaskWoken ); /* XXX */
-void* xSemaphoreGetMutexHolder( xSemaphoreHandle xMuxId);
+bool xSemaphoreMutexHolderIsCurrent( xSemaphoreHandle xMuxId);
 void vSemaphoreDelete( xSemaphoreHandle xSemaphore);
 void _exit (int __status);
 

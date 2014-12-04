@@ -17,7 +17,7 @@
         void x##_IRQHandler_wrapper(void)                 \
         {                                                 \
             while (1) {                                   \
-                rtos_signal_wait_set(SIGNAL_SET_IRQ_##x); \
+                rtos_signal_wait(RTOS_SIGNAL_ID_GENERIC); \
             }                                             \
         }
 
@@ -36,7 +36,7 @@
                     x##_sem = sem;                        \
                 }                                         \
                 x##_sem_give_count++;                     \
-                rtos_irq_event_raise(IRQ_EVENT_ID_##x);   \
+                rtos_interrupt_event_raise(RTOS_INTERRUPT_EVENT_ID_##x); \
                 return true;                              \
             }                                             \
             return false;                                 \
@@ -46,7 +46,7 @@
             while (1) {                                   \
                 int i, give_count;                        \
                 void *give_sem;                           \
-                rtos_signal_wait_set(SIGNAL_SET_IRQ_##x); \
+                rtos_signal_wait(RTOS_SIGNAL_ID_GENERIC); \
                 ulPortSetInterruptMask();                 \
                 give_count = x##_sem_give_count;          \
                 give_sem = x##_sem;                       \
@@ -61,7 +61,7 @@
 #define IRQ_WRAPPER(x) \
         bool eChronos_##x##_IRQHandler(void)              \
         {                                                 \
-            rtos_irq_event_raise(IRQ_EVENT_ID_##x);       \
+            rtos_interrupt_event_raise(RTOS_INTERRUPT_EVENT_ID_##x); \
             NVIC_DisableIRQ(x##_IRQn);                    \
             return true;                                  \
         }                                                 \
@@ -70,7 +70,7 @@
             extern void x##_IRQHandler(void);             \
             while (1) {                                   \
                 NVIC_EnableIRQ(x##_IRQn);                 \
-                rtos_signal_wait_set(SIGNAL_SET_IRQ_##x); \
+                rtos_signal_wait(RTOS_SIGNAL_ID_GENERIC); \
                 x##_IRQHandler();                         \
             }                                             \
         }
@@ -112,7 +112,7 @@ bool eChronos_UART5_IRQHandler(void)
         ivory_isr_sem_handle = NULL;
         UART5_sem_give_count += ivory_isr_sem_count;
         ivory_isr_sem_count = 0;
-        rtos_irq_event_raise(IRQ_EVENT_ID_UART5);
+        rtos_interrupt_event_raise(RTOS_INTERRUPT_EVENT_ID_UART5);
         return true;
     }
 
@@ -126,7 +126,7 @@ void UART5_IRQHandler_wrapper(void)
         int i, give_count;
         void *give_sem;
 
-        rtos_signal_wait_set(SIGNAL_SET_IRQ_UART5);
+        rtos_signal_wait(RTOS_SIGNAL_ID_GENERIC);
 
         ulPortSetInterruptMask();
         give_count = UART5_sem_give_count;

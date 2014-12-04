@@ -2,7 +2,7 @@
 <system>
   <modules>
     <module name="armv7m.build" />
-    <module name="armv7m.ctxt-switch" />
+    <module name="armv7m.ctxt-switch-preempt" />
 
     <module name="armv7m.exception-preempt">
       <trampolines>
@@ -11,7 +11,7 @@
 
         <trampoline>
           <name>systick</name>
-          <handler>rtos_tick_irq</handler>
+          <handler>echronos_systick</handler>
         </trampoline>
 
         <trampoline>
@@ -60,55 +60,52 @@
         <data_addr>0x20000000</data_addr>
 
       <!-- add wrapped systick irq handler to vectable: -->
-      <systick>exception_preempt_trampoline_systick</systick>
-      <svcall>svc_handler</svcall>
-      <pendsv>pendsv_handler</pendsv>
+      <systick>rtos_internal_exception_preempt_trampoline_systick</systick>
+      <svcall>rtos_internal_svc_handler</svcall>
+      <pendsv>rtos_internal_pendsv_handler</pendsv>
 
       <external_irqs>
         <external_irq>
           <number>25</number>
-          <handler>exception_preempt_trampoline_tim1_up_tim10</handler>
+          <handler>rtos_internal_exception_preempt_trampoline_tim1_up_tim10</handler>
         </external_irq>
         <external_irq>
           <number>27</number>
-          <handler>exception_preempt_trampoline_tim1_cc</handler>
+          <handler>rtos_internal_exception_preempt_trampoline_tim1_cc</handler>
         </external_irq>
         <external_irq>
           <number>33</number>
-          <handler>exception_preempt_trampoline_i2c2_ev</handler>
+          <handler>rtos_internal_exception_preempt_trampoline_i2c2_ev</handler>
         </external_irq>
         <external_irq>
           <number>34</number>
-          <handler>exception_preempt_trampoline_i2c2_er</handler>
+          <handler>rtos_internal_exception_preempt_trampoline_i2c2_er</handler>
         </external_irq>
         <external_irq>
           <number>35</number>
-          <handler>exception_preempt_trampoline_spi1</handler>
+          <handler>rtos_internal_exception_preempt_trampoline_spi1</handler>
         </external_irq>
         <external_irq>
           <number>37</number>
-          <handler>exception_preempt_trampoline_usart1</handler>
+          <handler>rtos_internal_exception_preempt_trampoline_usart1</handler>
         </external_irq>
         <external_irq>
           <number>38</number>
-          <handler>exception_preempt_trampoline_usart2</handler>
+          <handler>rtos_internal_exception_preempt_trampoline_usart2</handler>
         </external_irq>
         <external_irq>
           <number>53</number>
-          <handler>exception_preempt_trampoline_uart5</handler>
+          <handler>rtos_internal_exception_preempt_trampoline_uart5</handler>
         </external_irq>
         <external_irq>
           <number>71</number>
-          <handler>exception_preempt_trampoline_usart6</handler>
+          <handler>rtos_internal_exception_preempt_trampoline_usart6</handler>
         </external_irq>
       </external_irqs>
     </module>
 
     <module name="armv7m.semihost-debug" />
-    <module name="generic.debug">
-      <ll_debug>armv7m_semihost_</ll_debug>
-      <prefix></prefix>
-    </module>
+    <module name="generic.debug" />
 
     <!-- switch off debug messages:  -->
     <!--
@@ -119,16 +116,16 @@
       <!-- Uncomment to enable internal assertions -->
       <internal_asserts>true</internal_asserts>
       <fatal_error>fatal</fatal_error>
-      <prefix>rtos_</prefix>
+      <prefix>rtos</prefix>
       <taskid_size>8</taskid_size>
       <signalset_size>8</signalset_size>
-      <irqeventid_size>8</irqeventid_size>
+      <interrupteventid_size>8</interrupteventid_size>
 
       <tasks>
 
         <task>
           <name>init_thread</name>
-          <entry>main_task</entry>
+          <function>main_task</function>
           <priority>100</priority>
           <stack_size>256</stack_size>
         </task>
@@ -136,55 +133,55 @@
         <!-- IRQ tasks -->
         <task>
           <name>i2c2_ev_irqhandler</name>
-          <entry>I2C2_EV_IRQHandler_wrapper</entry>
+          <function>I2C2_EV_IRQHandler_wrapper</function>
           <priority>60</priority>
           <stack_size>256</stack_size>
         </task>
         <task>
           <name>i2c2_er_irqhandler</name>
-          <entry>I2C2_ER_IRQHandler_wrapper</entry>
+          <function>I2C2_ER_IRQHandler_wrapper</function>
           <priority>59</priority>
           <stack_size>256</stack_size>
         </task>
         <task>
           <name>spi1_irqhandler</name>
-          <entry>SPI1_IRQHandler_wrapper</entry>
+          <function>SPI1_IRQHandler_wrapper</function>
           <priority>58</priority>
           <stack_size>256</stack_size>
         </task>
         <task>
           <name>tim1_up_tim10_irqhandler</name>
-          <entry>TIM1_UP_TIM10_IRQHandler_wrapper</entry>
+          <function>TIM1_UP_TIM10_IRQHandler_wrapper</function>
           <priority>57</priority>
           <stack_size>256</stack_size>
         </task>
         <task>
           <name>tim1_cc_irqhandler</name>
-          <entry>TIM1_CC_IRQHandler_wrapper</entry>
+          <function>TIM1_CC_IRQHandler_wrapper</function>
           <priority>56</priority>
           <stack_size>256</stack_size>
         </task>
         <task>
           <name>uart5_irqhandler</name>
-          <entry>UART5_IRQHandler_wrapper</entry>
+          <function>UART5_IRQHandler_wrapper</function>
           <priority>54</priority>
           <stack_size>256</stack_size>
         </task>
         <task>
           <name>usart1_irqhandler</name>
-          <entry>USART1_IRQHandler_wrapper</entry>
+          <function>USART1_IRQHandler_wrapper</function>
           <priority>53</priority>
           <stack_size>256</stack_size>
         </task>
         <task>
           <name>usart2_irqhandler</name>
-          <entry>USART2_IRQHandler_wrapper</entry>
+          <function>USART2_IRQHandler_wrapper</function>
           <priority>52</priority>
           <stack_size>256</stack_size>
         </task>
         <task>
           <name>usart6_irqhandler</name>
-          <entry>USART6_IRQHandler_wrapper</entry>
+          <function>USART6_IRQHandler_wrapper</function>
           <priority>51</priority>
           <stack_size>256</stack_size>
         </task>
@@ -192,7 +189,7 @@
         <!-- AP tasks -->
         <task>
           <name>scheduler</name>
-          <entry>scheduler_task</entry>
+          <function>scheduler_task</function>
           <priority>50</priority>
           <stack_size>1024</stack_size>
         </task>
@@ -200,7 +197,7 @@
         <!-- Priority tasks -->
         <task>
           <name>tower_task_loop_sensorscapturetask_72_proc</name>
-          <entry>tower_task_loop_sensorsCaptureTask_72_proc</entry>
+          <function>tower_task_loop_sensorsCaptureTask_72_proc</function>
           <priority>49</priority>
           <stack_size>1024</stack_size>
         </task>
@@ -209,37 +206,37 @@
         <!-- tower tasks -->
         <task>
           <name>tower_task_loop_proxy_controllaw_367_proc</name>
-          <entry>tower_task_loop_proxy_controllaw_367_proc</entry>
+          <function>tower_task_loop_proxy_controllaw_367_proc</function>
           <priority>45</priority>
           <stack_size>256</stack_size>
         </task>
         <task>
           <name>tower_task_loop_proxy_userinput_358_proc</name>
-          <entry>tower_task_loop_proxy_userinput_358_proc</entry>
+          <function>tower_task_loop_proxy_userinput_358_proc</function>
           <priority>45</priority>
           <stack_size>256</stack_size>
         </task>
         <task>
           <name>tower_task_loop_uimuxtask_170_proc</name>
-          <entry>tower_task_loop_uiMuxTask_170_proc</entry>
+          <function>tower_task_loop_uiMuxTask_170_proc</function>
           <priority>45</priority>
           <stack_size>256</stack_size>
         </task>
         <task>
           <name>tower_task_loop_controllawtask_146_proc</name>
-          <entry>tower_task_loop_controlLawTask_146_proc</entry>
+          <function>tower_task_loop_controlLawTask_146_proc</function>
           <priority>45</priority>
           <stack_size>256</stack_size>
         </task>
         <task>
           <name>tower_task_loop_ppminputtower_102_proc</name>
-          <entry>tower_task_loop_ppmInputTower_102_proc</entry>
+          <function>tower_task_loop_ppmInputTower_102_proc</function>
           <priority>45</priority>
           <stack_size>512</stack_size>
         </task>
         <task>
           <name>tower_task_loop_motmix_552_proc</name>
-          <entry>tower_task_loop_motmix_552_proc</entry>
+          <function>tower_task_loop_motmix_552_proc</function>
           <priority>45</priority>
           <stack_size>512</stack_size>
         </task>
@@ -247,31 +244,31 @@
         
         <task>
           <name>tower_task_loop_motors_state_572_proc</name>
-          <entry>tower_task_loop_motors_state_572_proc</entry>
+          <function>tower_task_loop_motors_state_572_proc</function>
           <priority>40</priority>
           <stack_size>256</stack_size>
         </task>
         <task>
           <name>tower_task_loop_control_state_563_proc</name>
-          <entry>tower_task_loop_control_state_563_proc</entry>
+          <function>tower_task_loop_control_state_563_proc</function>
           <priority>40</priority>
           <stack_size>256</stack_size>
         </task>
         <task>
           <name>tower_task_loop_control_396_proc</name>
-          <entry>tower_task_loop_control_396_proc</entry>
+          <function>tower_task_loop_control_396_proc</function>
           <priority>40</priority>
           <stack_size>512</stack_size>
         </task>
          <task>
           <name>tower_task_loop_position_state_633_proc</name>
-          <entry>tower_task_loop_position_state_633_proc</entry>
+          <function>tower_task_loop_position_state_633_proc</function>
           <priority>40</priority>
           <stack_size>512</stack_size>
         </task>    
         <task>
           <name>tower_task_loop_px4ioar_587_proc</name>
-          <entry>tower_task_loop_px4ioar_587_proc</entry>
+          <function>tower_task_loop_px4ioar_587_proc</function>
           <priority>40</priority>
           <stack_size>512</stack_size>
         </task>
@@ -282,28 +279,28 @@
 
         <task>
           <name>tower_task_loop_commsecrecoverytask_1433_proc</name>
-          <entry>tower_task_loop_commsecRecoveryTask_1433_proc</entry>
+          <function>tower_task_loop_commsecRecoveryTask_1433_proc</function>
           <priority>40</priority>
           <stack_size>256</stack_size>
         </task>
         
         <task>
           <name>tower_task_loop_proxy_nav_law_385_proc</name>
-          <entry>tower_task_loop_proxy_nav_law_385_proc</entry>
+          <function>tower_task_loop_proxy_nav_law_385_proc</function>
           <priority>40</priority>
           <stack_size>256</stack_size>
         </task>
         
         <task>
           <name>tower_task_loop_proxy_navsetpt_376_proc</name>
-          <entry>tower_task_loop_proxy_navsetpt_376_proc</entry>
+          <function>tower_task_loop_proxy_navsetpt_376_proc</function>
           <priority>40</priority>
           <stack_size>256</stack_size>
         </task>
         
         <task>
           <name>tower_task_loop_navigation_199_proc</name>
-          <entry>tower_task_loop_navigation_199_proc</entry>
+          <function>tower_task_loop_navigation_199_proc</function>
           <priority>40</priority>
           <stack_size>256</stack_size>
         </task>
@@ -316,35 +313,35 @@
         
         <task>
           <name>tower_task_loop_mavlinkinputtask_124_proc</name>
-          <entry>tower_task_loop_mavlinkInputTask_124_proc</entry>
+          <function>tower_task_loop_mavlinkInputTask_124_proc</function>
           <priority>40</priority>
           <stack_size>512</stack_size>
         </task>
 
         <task>
           <name>tower_task_loop_gcsreceivetask_uart1_709_proc</name>
-          <entry>tower_task_loop_gcsReceiveTask_uart1_709_proc</entry>
+          <function>tower_task_loop_gcsReceiveTask_uart1_709_proc</function>
           <priority>40</priority>
           <stack_size>1024</stack_size>
         </task>
         
         <task>
           <name>tower_task_loop_gcstransmittask_uart1_906_proc</name>
-          <entry>tower_task_loop_gcsTransmitTask_uart1_906_proc</entry>
+          <function>tower_task_loop_gcsTransmitTask_uart1_906_proc</function>
           <priority>40</priority>
           <stack_size>1024</stack_size>
         </task>
         
         <task>
           <name>tower_task_loop_gcsreceivetask_uart5_1105_proc</name>
-          <entry>tower_task_loop_gcsReceiveTask_uart5_1105_proc</entry>
+          <function>tower_task_loop_gcsReceiveTask_uart5_1105_proc</function>
           <priority>40</priority>
           <stack_size>1024</stack_size>
         </task>
         
         <task>
           <name>tower_task_loop_gcstransmittask_uart5_1302_proc</name>
-          <entry>tower_task_loop_gcsTransmitTask_uart5_1302_proc</entry>
+          <function>tower_task_loop_gcsTransmitTask_uart5_1302_proc</function>
           <priority>40</priority>
           <stack_size>1024</stack_size>
         </task>
@@ -352,50 +349,50 @@
         
         <task>
           <name>tower_task_loop_encrypttask_uart5_1294_proc</name>
-          <entry>tower_task_loop_encryptTask_uart5_1294_proc</entry>
+          <function>tower_task_loop_encryptTask_uart5_1294_proc</function>
           <priority>35</priority>
           <stack_size>512</stack_size>
         </task>
         <task>
           <name>tower_task_loop_decrypttask_uart5_1092_proc</name>
-          <entry>tower_task_loop_decryptTask_uart5_1092_proc</entry>
+          <function>tower_task_loop_decryptTask_uart5_1092_proc</function>
           <priority>35</priority>
           <stack_size>512</stack_size>
         </task>
         <task>
           <name>tower_task_loop_radio_status_uart5_1083_proc</name>
-          <entry>tower_task_loop_radio_status_uart5_1083_proc</entry>
+          <function>tower_task_loop_radio_status_uart5_1083_proc</function>
           <priority>35</priority>
           <stack_size>256</stack_size>
         </task>
         <task>
           <name>tower_task_loop_datalink_uart5_1050_proc</name>
-          <entry>tower_task_loop_datalink_uart5_1050_proc</entry>
+          <function>tower_task_loop_datalink_uart5_1050_proc</function>
           <priority>35</priority>
           <stack_size>256</stack_size>
         </task>
         
         <task>
           <name>tower_task_loop_encrypttask_uart1_898_proc</name>
-          <entry>tower_task_loop_encryptTask_uart1_898_proc</entry>
+          <function>tower_task_loop_encryptTask_uart1_898_proc</function>
           <priority>35</priority>
           <stack_size>512</stack_size>
         </task>
         <task>
           <name>tower_task_loop_decrypttask_uart1_696_proc</name>
-          <entry>tower_task_loop_decryptTask_uart1_696_proc</entry>
+          <function>tower_task_loop_decryptTask_uart1_696_proc</function>
           <priority>35</priority>
           <stack_size>512</stack_size>
         </task>
         <task>
           <name>tower_task_loop_radio_status_uart1_687_proc</name>
-          <entry>tower_task_loop_radio_status_uart1_687_proc</entry>
+          <function>tower_task_loop_radio_status_uart1_687_proc</function>
           <priority>35</priority>
           <stack_size>256</stack_size>
         </task>
         <task>
           <name>tower_task_loop_datalink_uart1_654_proc</name>
-          <entry>tower_task_loop_datalink_uart1_654_proc</entry>
+          <function>tower_task_loop_datalink_uart1_654_proc</function>
           <priority>35</priority>
           <stack_size>256</stack_size>
         </task>
@@ -403,82 +400,90 @@
 
         <task>
           <name>tower_task_loop_ubloxgps_54_proc</name>
-          <entry>tower_task_loop_ubloxGPS_54_proc</entry>
+          <function>tower_task_loop_ubloxGPS_54_proc</function>
           <priority>30</priority>
           <stack_size>512</stack_size>
         </task>
 
         <task>
           <name>tower_task_loop_blink_542_proc</name>
-          <entry>tower_task_loop_blink_542_proc</entry>
+          <function>tower_task_loop_blink_542_proc</function>
           <priority>25</priority>
           <stack_size>256</stack_size>
         </task>
 
       </tasks>
 
-      <irq_events>
-        <irq_event>
+      <signal_labels>
+
+        <signal_label>
+          <name>generic</name>
+        </signal_label>
+
+      </signal_labels>
+
+      <interrupt_events>
+        <interrupt_event>
           <name>i2c2_ev</name>
-          <task_name>i2c2_ev_irqhandler</task_name>
-          <sig_set>1</sig_set>
-        </irq_event>
+          <task>i2c2_ev_irqhandler</task>
+          <sig_set>generic</sig_set>
+        </interrupt_event>
 
-        <irq_event>
+        <interrupt_event>
           <name>i2c2_er</name>
-          <task_name>i2c2_er_irqhandler</task_name>
-          <sig_set>1</sig_set>
-        </irq_event>
+          <task>i2c2_er_irqhandler</task>
+          <sig_set>generic</sig_set>
+        </interrupt_event>
 
-        <irq_event>
+        <interrupt_event>
           <name>spi1</name>
-          <task_name>spi1_irqhandler</task_name>
-          <sig_set>1</sig_set>
-        </irq_event>
+          <task>spi1_irqhandler</task>
+          <sig_set>generic</sig_set>
+        </interrupt_event>
 
-        <irq_event>
+        <interrupt_event>
           <name>tim1_up_tim10</name>
-          <task_name>tim1_up_tim10_irqhandler</task_name>
-          <sig_set>1</sig_set>
-        </irq_event>
+          <task>tim1_up_tim10_irqhandler</task>
+          <sig_set>generic</sig_set>
+        </interrupt_event>
 
-        <irq_event>
+        <interrupt_event>
           <name>tim1_cc</name>
-          <task_name>tim1_cc_irqhandler</task_name>
-          <sig_set>1</sig_set>
-        </irq_event>
+          <task>tim1_cc_irqhandler</task>
+          <sig_set>generic</sig_set>
+        </interrupt_event>
 
-        <irq_event>
+        <interrupt_event>
           <name>uart5</name>
-          <task_name>uart5_irqhandler</task_name>
-          <sig_set>1</sig_set>
-        </irq_event>
+          <task>uart5_irqhandler</task>
+          <sig_set>generic</sig_set>
+        </interrupt_event>
 
-        <irq_event>
+        <interrupt_event>
           <name>usart1</name>
-          <task_name>usart1_irqhandler</task_name>
-          <sig_set>1</sig_set>
-        </irq_event>
+          <task>usart1_irqhandler</task>
+          <sig_set>generic</sig_set>
+        </interrupt_event>
 
-        <irq_event>
+        <interrupt_event>
           <name>usart2</name>
-          <task_name>usart2_irqhandler</task_name>
-          <sig_set>1</sig_set>
-        </irq_event>
+          <task>usart2_irqhandler</task>
+          <sig_set>generic</sig_set>
+        </interrupt_event>
 
-        <irq_event>
+        <interrupt_event>
           <name>usart6</name>
-          <task_name>usart6_irqhandler</task_name>
-          <sig_set>1</sig_set>
-        </irq_event>
+          <task>usart6_irqhandler</task>
+          <sig_set>generic</sig_set>
+        </interrupt_event>
 
 
-        <irq_event>
+        <interrupt_event>
           <name>mainidle</name>
-          <task_name>init_thread</task_name>
-          <sig_set>1</sig_set>
-        </irq_event>
-      </irq_events>
+          <task>init_thread</task>
+          <sig_set>generic</sig_set>
+        </interrupt_event>
+      </interrupt_events>
 
       <!-- mutex and semaphore numbers come from counting the calls to:
            *_semaphore_create_* in ivory generated code (apps/flight/gen)
@@ -561,6 +566,9 @@
         <mutex><name>m70</name></mutex>
         <mutex><name>m71</name></mutex>
       </mutexes>
+      <mutex>
+        <stats>false</stats>
+      </mutex>
 
       <semaphores>
         <semaphore><name>sem00</name></semaphore>
@@ -646,6 +654,9 @@
         <semaphore><name>sem80</name></semaphore>
         <semaphore><name>init_sem</name></semaphore>
       </semaphores>
+
+      <semaphore_value_size>16</semaphore_value_size>
+      <semaphore_enable_max>true</semaphore_enable_max>
 
     </module>
 
