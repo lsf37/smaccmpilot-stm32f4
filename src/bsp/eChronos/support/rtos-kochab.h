@@ -56,7 +56,7 @@ typedef uint8_t RtosInterruptEventId;
 
 typedef uint8_t RtosMutexId;
 typedef uint8_t RtosSemId;
-typedef uint8_t RtosSemValue;
+typedef uint16_t RtosSemValue;
 typedef uint8_t RtosErrorId;
 typedef uint8_t RtosTaskId;
 
@@ -379,7 +379,9 @@ extern void *entry_fn[42];
 
 extern RtosTicksAbsolute rtos_timer_current_ticks;
 
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
 
@@ -420,5 +422,9 @@ void rtos_sem_max_init(RtosSemId s, RtosSemValue max);
 RtosTaskId rtos_task_current(void);
 void rtos_start(void);
 void rtos_sleep(RtosTicksRelative ticks) RTOS_REENTRANT;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* RTOS_KOCHAB_H */
