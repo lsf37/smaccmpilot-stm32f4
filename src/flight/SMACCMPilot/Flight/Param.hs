@@ -87,13 +87,13 @@ data FlightParams f = FlightParams
 -- | Initialize flight parameters to their default values.
 flightParams :: Monad m => ParamT f m (FlightParams f)
 flightParams =                          -- P     I     D     IMAX (-IMIN)
-  FlightParams <$> group "RLL" (stabParams 2.500 0.000 0.000 8.0
-                                           0.100 0.000 0.095 0.5)
+  FlightParams <$> group "RLL" (stabParams 3.500 0.000 0.000 8.0
+                                           0.045 0.000 0.0005 0.25)
                <*> group "PIT" (stabParams 2.500 0.000 0.000 8.0
-                                           0.100 0.000 0.095 0.5)
+                                           0.045 0.000 0.0005 0.25)
                <*> param "PITRLL_UI_SENS"  45.0
                <*> group "YAW" (stabParams 1.0   0.000 0.000 8.0
-                                           0.300 0.0   0.0   1.0)
+                                           0.305 0.015 0.0   1.0)
                <*> param "YAW_UI_SENS"     180.0
                <*> group "ALT" altitudeParams
                <*> group "POS" posCtlParams
@@ -101,8 +101,8 @@ flightParams =                          -- P     I     D     IMAX (-IMIN)
   where
   altitudeParams :: Monad m => ParamT f m (AltitudeParams f)
   altitudeParams =                              -- P     I     D     IMAX
-    AltitudeParams <$> group "RATE" (pidParams 0.070 0.010 0.005 0.8)
-                   <*> group "POS"  (pidParams 0.500 0.000 0.000 5.0)
+    AltitudeParams <$> group "RATE" (pidParams 0.050 0.000 0.007 0.8)
+                   <*> group "POS"  (pidParams 0.600 0.000 0.000 5.0)
                                              -- sens deadband
                    <*> group "UI"   (thrUIParams 1.0 0.30)
 
