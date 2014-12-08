@@ -58,6 +58,7 @@
         <flash_load_addr>0x08000000</flash_load_addr>
         <code_addr>0x08000000</code_addr>
         <data_addr>0x20000000</data_addr>
+        <stack_size>0x800</stack_size>
 
       <!-- add wrapped systick irq handler to vectable: -->
       <systick>rtos_internal_exception_preempt_trampoline_systick</systick>
