@@ -22,79 +22,34 @@ extern void UNIMPLEMENTED(void);
 #define NOP(type) do { UNIMPLEMENTED(); return (type)0; } while(0)
 
 
-#define	TASK_NUM_MAX	(RTOS_TASK_ID_MAX + 1)
-
-static int assignTskId = 0;
-
-/* Now it is a dummy handler, used to identify tasks */
-struct tsk_t{
-	uint8_t taskid;
-};
-
-struct tsk_t * xTaskList;
-
 void * eChronosCreateTask(void * pxTaskCode)
 {
-	uint8_t selectid = assignTskId;
-	//assignTskId ++;
-	bool entryfn = false;
-	int i = 0;
+    uint32_t tskId;
 
-    /* Initialise internal book keeping if required */
-    if(xTaskList == NULL){
-        xTaskList = malloc(sizeof(*xTaskList) * TASK_NUM_MAX);
+    for (tskId = RTOS_TASK_ID_ZERO; tskId <= RTOS_TASK_ID_MAX; tskId++) {
+        if ((void *)entry_fn[tskId] == pxTaskCode) {
+            return (void *)tskId;
+        }
     }
 
-	for(i=0;i<TASK_NUM_MAX;i++){
-		//debug_println("Checking fn @ ");
-		//debug_printhex32(entry_fn[i]);
-		//debug_println("\n");
-
-		entryfn = ((void *)entry_fn[i] == pxTaskCode);
-		if(entryfn){
-			//debug_println("Found PxTaskcode!\n ");
-			break;
-		}
-	}
-	if(i < TASK_NUM_MAX){
-		selectid = i;
-	}else{
-		//debug_println("PxTaskcode not found!\n ");
-		//debug_printhex32(pxTaskCode);
-		//debug_println("\n");
-		return NULL;
-	}
-#ifdef ECHRONOS_DEBUG_ENABLE
-	debug_println("eChronosCreateTaskId ");
-	debug_printhex32(selectid);
-	debug_println(" @ ");
-	debug_printhex32((unsigned int)&xTaskList[selectid]);
-	debug_println("\n");
-#endif
-	return (void*)&xTaskList[selectid];
+    return NULL;
 }
-
-
 
 void eChronosStartRTOS(void)
 {
-	rtos_start();
+    rtos_start();
 }
 
-void * eChronosGetCurrentTaskHandler( void )
+void * eChronosGetCurrentTaskHandler(void)
 {
-	uint8_t tskId = rtos_task_current();
-	return (void*)&xTaskList[tskId];
-}
+    uint32_t tskId = rtos_task_current();
 
-void * eChronosGetTaskHandler(uint8_t tskId)
-{
-	return (void*)&xTaskList[tskId];
+    return (void *)tskId;
 }
 
 unsigned long eChronosGetSysTick(void)
 {
-	return rtos_timer_current_ticks;
+    return rtos_timer_current_ticks;
 }
 
 
