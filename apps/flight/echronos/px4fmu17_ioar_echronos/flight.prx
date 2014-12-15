@@ -661,5 +661,7 @@
 
     </module>
 
+    <module name="smaccmpilot.entry-fn" />
+
   </modules>
 </system>

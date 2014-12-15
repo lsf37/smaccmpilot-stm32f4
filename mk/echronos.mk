@@ -20,6 +20,7 @@ PRJ=$(realpath $(CONFIG_ECHRONOS_PRJ)/prj)
 ECHRONOS_RAW_OBJECTS := ctxt-switch-preempt.o       \
                         armv7m.exception-preempt.o  \
                         generic.debug.o             \
+                        entry-fn.o                  \
                         rtos-kochab.o               \
                         semihost-debug.o            \
                         vectable.o                  \
@@ -48,6 +49,7 @@ $$($(1)_ECHRONOS_PRX): $$(wildcard $$($(1)_GEN_DIR)/*_entrypoints.xml)
 
 # OS recipe
 $$($(1)_ECHRONOS_OUT_ABS): $$($(1)_ECHRONOS_PRX)
+	cp -r $(CURDIR)/packages/* $(ECHRONOS_PACKAGE)
 	cd $(ECHRONOS_PACKAGE) &&                         \
             $(PRJ) -o $$($(1)_ECHRONOS_OUT_ABS)     \
                     --search .                      \
