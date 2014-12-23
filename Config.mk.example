@@ -25,9 +25,6 @@ CONFIG_TOWER_REPOSITORY := ../tower
 # Root directory of the FreeRTOS source tree.
 CONFIG_FREERTOS_PREFIX := ../FreeRTOS
 
-# Root directory of the eChronos tree
-CONFIG_ECHRONOS_PREFIX := ../../echronos-smaccm
-
 # Set this variable when using the bootloader on the PX4FMU,
 # unset if flashing purely via JTAG.
 # CONFIG_PX4FMU_BOOTLOADER := 1
@@ -41,12 +38,6 @@ CONFIG_IVORY_ASSERT := IVORY_TEST
 # ------------------------------------------------------------------------------
 # Optional configurations
 # ------------------------------------------------------------------------------
-
-# NICTA eChronos RTOS build
-# Root directory of the eChronos tree
-CONFIG_ECHRONOS_PREFIX := ../../echronos-smaccm
-# Location of the prj executable.
-CONFIG_ECHRONOS_PRJ    := $(CONFIG_ECHRONOS_PREFIX)/x86_64-unknown-linux-gnu/bin
 
 # Optional: use graphviz to generate PDF from tower graph output.
 # Uncomment this option if you have the `dot` tool installed.
