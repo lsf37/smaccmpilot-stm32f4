@@ -7,4 +7,4 @@
  */
 
 /* Map of task ID to entry function */
-extern void *entry_fn[{{armv7m_rtos-kochab_tasks.length}}];
+extern void *entry_fn[{{tasks.length}}];
