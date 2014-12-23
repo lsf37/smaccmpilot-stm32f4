@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <system>
   <modules>
-    <module name="armv7m.build" />
+    <module name="smaccmpilot.build" />
     <module name="armv7m.ctxt-switch-preempt" />
 
     <module name="armv7m.exception-preempt">
@@ -54,7 +54,7 @@
       </trampolines>
     </module>
 
-    <module name="armv7m.vectable">
+    <module name="smaccmpilot.vectable">
         <flash_load_addr>0x08000000</flash_load_addr>
         <code_addr>0x08000000</code_addr>
         <data_addr>0x20000000</data_addr>
