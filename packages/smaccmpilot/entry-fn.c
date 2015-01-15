@@ -9,12 +9,12 @@
 #include <rtos-kochab.h>
 #include "entry-fn.h"
 
-{{#tasks}}
+{{#rtos.tasks}}
 extern void {{function}}(void);
-{{/tasks}}
+{{/rtos.tasks}}
 
-void *entry_fn[{{tasks.length}}] = {
-{{#tasks}}
-    [{{prefix_const}}TASK_ID_{{name|u}}] = (void*)&{{function}},
-{{/tasks}}
+void *entry_fn[{{rtos.tasks.length}}] = {
+{{#rtos.tasks}}
+    [{{rtos.prefix_const}}TASK_ID_{{name|u}}] = (void*)&{{function}},
+{{/rtos.tasks}}
 };
